@@ -25,7 +25,7 @@ class Gameboard {
 		let hasMine = Array(this.mineCount).fill(true).concat(
 									Array(this.width*this.height - this.mineCount - 1).fill(false));
 		Utils.shuffle(hasMine);
-		hasMine.splice(x*this.width + y, 0, false);
+		hasMine.splice(x*this.height + y, 0, false);
 		this.createCellsFromArray(hasMine);
 	}
 
@@ -33,7 +33,7 @@ class Gameboard {
 		for(let x=0; x<this.width; x++) {
 			this.board[x] = [];
 			for(let y=0; y<this.height; y++) {
-				this.board[x][y] = new Cell(hasMine[x*this.width + y]);
+				this.board[x][y] = new Cell(hasMine[x*this.height + y]);
 			}
 		}
 
@@ -148,8 +148,6 @@ class Gameboard {
 	}
 
 	markCell(x, y) {
-		x = Math.floor(x/this.cellSize);
-		y = Math.floor(y/this.cellSize);
 		if(this.gameover || !this.validCoordinates(x, y)) {
 			return false;
 		}
