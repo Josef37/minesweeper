@@ -12,6 +12,8 @@ function main() {
 
   canvas.addEventListener("click", onclick);
   canvas.addEventListener("contextmenu", onclick);
+  canvas.addEventListener("mousemove",
+    event => gameboard.highlight(context, event.clientX - padding, event.clientY - padding));
   window.addEventListener("resize", resizeCanvas);
 
   function onclick(event) {

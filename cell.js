@@ -4,6 +4,7 @@ class Cell {
 		this.isRevealed = false;
 		this.isMarked = false;
 		this.mineCount = -1;
+		this.highlighted = false;
 	}
 
 	setMineCount(mineCount) {
@@ -30,9 +31,11 @@ class Cell {
 
 	draw(context, x, y, size, gameover=false) {
 		if (this.isRevealed) {
-			context.fillStyle = "white";
+			context.fillStyle = "#fff";
+		} else if (this.highlighted) {
+			context.fillStyle = "#ddf";
 		} else {
-			context.fillStyle = "lightblue";
+			context.fillStyle = "#bbf"
 		}
 		context.fillRect(x, y, size, size);
 		context.strokeStyle = "black";

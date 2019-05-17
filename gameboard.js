@@ -8,6 +8,8 @@ class Gameboard {
 		this.cellSize;
 		this.gameover = false;
 		this.won = false;
+		this.highlightedX = -1;
+		this.highlightedY = -1;
 		this.createCells();
 	}
 
@@ -156,6 +158,26 @@ class Gameboard {
 		return cell.toggleMark();
 	}
 
+	highlight(context, x, y) {
+		x = Math.floor(x/this.cellSize);
+		y = Math.floor(y/this.cellSize);
+		if(this.gameover || !this.validCoordinates(x, y)) {
+			return;
+		}
+		if(x == this.highlightedX && y == this.highlightedY) {
+			return;
+		}
+		if(this.highlightedX >= 0 && this.highlightedY >= 0) {
+			this.board[this.highlightedX][this.highlightedY].highlighted = false;
+			this.board[this.highlightedX][this.highlightedY]
+				.draw(context, this.highlightedX*this.cellSize, this.highlightedY*this.cellSize, this.cellSize);
+		}
+		this.highlightedX = x;
+		this.highlightedY = y;
+		this.board[x][y].highlighted = true;
+		this.board[x][y].draw(context, x*this.cellSize, y*this.cellSize, this.cellSize);
+	}
+
 	draw(context, width, height) {
 		this.cellSize = Math.floor(Math.min(width/this.width,
 		 																		height/this.height));
@@ -176,11 +198,11 @@ class Gameboard {
 			context.fillStyle = "black";
 			context.textAlign = "center";
 			context.textBaseline = "middle";
-			context.font = `${this.cellSize*0.6}px sans-serif`;
+			context.font = `${height*0.06}px sans-serif`;
 			context.fillText(this.won ? 'You\'ve won!' : 'You\'ve lost...',
-			 									centerX, centerY - 0.5*this.cellSize);
-			context.font = `${this.cellSize*0.3}px sans-serif`;
-			context.fillText('(right-click to restart)', centerX, centerY + 0.5*this.cellSize);
+			 									centerX, centerY - 0.05*height);
+			context.font = `${height*0.03}px sans-serif`;
+			context.fillText('(right-click to restart)', centerX, centerY + 0.025*height);
 		}
 	}
 }
