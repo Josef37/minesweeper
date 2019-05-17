@@ -15,6 +15,19 @@ class Gameboard {
 		let hasMine = Array(this.mineCount).fill(true).concat(
 									Array(this.width*this.height - this.mineCount).fill(false));
 		Utils.shuffle(hasMine);
+		this.createCellsFromArray(hasMine);
+	}
+
+	// makes sure no mine is at position (x,y)
+	createCellsSave(x, y) {
+		let hasMine = Array(this.mineCount).fill(true).concat(
+									Array(this.width*this.height - this.mineCount - 1).fill(false));
+		Utils.shuffle(hasMine);
+		hasMine.splice(x*this.width + y, 0, false);
+		this.createCellsFromArray(hasMine);
+	}
+
+	createCellsFromArray(hasMine) {
 		for(let x=0; x<this.width; x++) {
 			this.board[x] = [];
 			for(let y=0; y<this.height; y++) {
@@ -72,7 +85,9 @@ class Gameboard {
 		if(this.gameover || !this.validCoordinates(x, y) || this.board[x][y].isMarked) {
 			return false;
 		}
-
+		if(this.unrevealedCells == this.width*this.height) {
+			this.createCellsSave(x, y);
+		}
 		let cell = this.board[x][y];
 		let revealedCells = [];
 		let mineRevealed = false;
