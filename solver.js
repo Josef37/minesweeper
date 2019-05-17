@@ -2,7 +2,6 @@ class Solver {
   constructor(gameboard) {
     this.gameboard = gameboard;
     this.rulesets = [];
-    this.rulesForCells = new Multimap();
     this.rulesetsFromGameboard();
     console.log(this);
   }
@@ -14,10 +13,7 @@ class Solver {
     }
     let undiscoveredCells = new Set();
     for(let rule of rules) {
-      rule.cells.forEach(cell => {
-        undiscoveredCells.add(cell);
-        this.rulesForCells.set(cell, rule);
-      });
+      rule.cells.forEach(cell => undiscoveredCells.add(cell));
     }
     // Until each cell was discovered, collect the affected rules connected to that cell
     while (undiscoveredCells.size > 0) {
@@ -38,7 +34,7 @@ class Solver {
           }
         }
       }
-      this.rulesets .push(affectedRules);
+      this.rulesets.push(new Ruleset(affectedRules));
     }
   }
 
@@ -101,9 +97,8 @@ class Solver {
 
   solveWithLinkingRules() {
     for(let ruleset of this.rulesets) {
-      for(let rule of ruleset) {
-
-      }
+      ruleset.getProbability();
+      // TODO Beachte ungeöffnete Minen außerhalb der Regeln
     }
   }
 
@@ -111,6 +106,37 @@ class Solver {
     let x = Math.floor(index / this.gameboard.width),
         y = index % this.gameboard.width;
     return [x, y];
+  }
+}
+
+class Ruleset {
+  constructor(rules) {
+    this.rules = rules;
+    this.cellToRules = new Multimap();
+    for(let rule of this.rules) {
+      rule.cells.forEach(cell => this.cellToRules.set(cell, rule));
+    }
+  }
+
+  // TODO Rename
+  getProbability() {
+    let values = new Map();
+    for(let cell of this.cellToRules.keys()) {
+      values.set(cell, null);
+    }
+    let firstCell = values.keys().next().value;
+    values.set(firstCell, 0);
+    applyRules(values, this.cellToRules.get(firstCell));
+    values.set(firstCell, 1);
+  }
+
+  // TODO Find a way for rules to incorporate the fixed values
+  applyRules(values, rules) {
+
+  }
+
+  [Symbol.iterator]() {
+    return this.rules.values();
   }
 }
 

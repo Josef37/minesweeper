@@ -26,10 +26,21 @@ class Multimap {
   }
 
   delete(key, value) {
-    if(typeof value === "undefined") {
-      this.map.delete(key);
-    } else {
-      this.map.get(key).delete(value);
+    if(!this.map.has(key)) {
+      return false;
     }
+    if(typeof value === "undefined") {
+      return this.map.delete(key);
+    } else {
+      if(this.map.get(key).size == 1) {
+        return this.map.delete(key);
+      } else {
+        return this.map.get(key).delete(value);
+      }
+    }
+  }
+
+  keys() {
+    return this.map.keys();
   }
 }
