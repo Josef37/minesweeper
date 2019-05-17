@@ -51,10 +51,6 @@ class Gameboard {
 		this.createCells();
 	}
 
-	validCoordinates(x, y) {
-		return 0 <= x && x < this.width && 0 <= y && y < this.height;
-	}
-
 	iterateNeighbours(x, y, callback) {
 		for(let dx of [-1, 0, 1]) {
 			for(let dy of [-1, 0, 1]) {
@@ -158,6 +154,10 @@ class Gameboard {
 		return [Math.floor(canvasX/this.cellSize), Math.floor(canvasY/this.cellSize)];
 	}
 
+	validCoordinates(x, y) {
+		return 0 <= x && x < this.width && 0 <= y && y < this.height;
+	}
+
 	convertForTenserflow() {
 		let tensor = [];
 		for(let x=0; x<this.width; x++) {
@@ -177,16 +177,20 @@ class Gameboard {
 	highlight(context, x, y) {
 		x = Math.floor(x/this.cellSize);
 		y = Math.floor(y/this.cellSize);
-		if(this.gameover || !this.validCoordinates(x, y)) {
+		if(this.gameover) {
 			return;
 		}
 		if(x == this.highlightedX && y == this.highlightedY) {
 			return;
 		}
-		if(this.highlightedX >= 0 && this.highlightedY >= 0) {
+		if(this.validCoordinates(this.highlightedX, this.highlightedY)) {
 			this.board[this.highlightedX][this.highlightedY].highlighted = false;
 			this.board[this.highlightedX][this.highlightedY]
 				.draw(context, this.highlightedX*this.cellSize, this.highlightedY*this.cellSize, this.cellSize);
+		}
+		if(!this.validCoordinates(x, y)) {
+			this.highlightedX = this.highlightedY = -1;
+			return;
 		}
 		this.highlightedX = x;
 		this.highlightedY = y;
