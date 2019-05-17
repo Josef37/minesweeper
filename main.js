@@ -3,15 +3,16 @@ window.addEventListener('DOMContentLoaded', main);
 function main() {
   let canvas = document.getElementById('gameboard'),
       context = canvas.getContext('2d'),
-      width = canvas.width = window.innerWidth,
-      height = canvas.height = window.innerHeight,
+      width,
+      height,
       padding = 50;
 
   let gameboard = new Gameboard(10, 10, 10);
-  context.translate(padding, padding);
-  drawGameboard();
+  resizeCanvas();
+
   canvas.addEventListener("click", onclick);
   canvas.addEventListener("contextmenu", onclick);
+  window.addEventListener("resize", resizeCanvas);
 
   function onclick(event) {
     let x = event.clientX - padding,
@@ -26,11 +27,18 @@ function main() {
       }
     }
     drawGameboard();
-
     event.preventDefault();
   }
 
   function drawGameboard() {
     gameboard.draw(context, width-2*padding, height-2*padding);
+  }
+
+  function resizeCanvas() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+
+    context.translate(padding, padding);
+    drawGameboard();
   }
 }
