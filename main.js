@@ -8,6 +8,7 @@ function main() {
       padding = 50;
 
   let gameboard = new Gameboard(10, 10, 10);
+  console.log(new Solver(gameboard));
   resizeCanvas();
 
   canvas.addEventListener("click", onclick);
@@ -34,6 +35,8 @@ function main() {
 
   function drawGameboard() {
     gameboard.draw(context, width-2*padding, height-2*padding);
+    console.log(new Solver(gameboard));
+
   }
 
   function resizeCanvas() {
