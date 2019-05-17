@@ -7,3 +7,29 @@ class Utils {
       return a;
   }
 }
+
+class Multimap {
+  constructor() {
+    this.map = new Map();
+  }
+
+  set(key, value) {
+    if(this.map.has(key)) {
+      this.map.get(key).add(value);
+    } else {
+      this.map.set(key, new Set([value]));
+    }
+  }
+
+  get(key) {
+    return this.map.get(key);
+  }
+
+  delete(key, value) {
+    if(typeof value === "undefined") {
+      this.map.delete(key);
+    } else {
+      this.map.get(key).delete(value);
+    }
+  }
+}

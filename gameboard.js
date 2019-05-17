@@ -82,8 +82,6 @@ class Gameboard {
 	}
 
 	doAction(x, y) {
-		x = Math.floor(x/this.cellSize);
-		y = Math.floor(y/this.cellSize);
 		if(this.gameover || !this.validCoordinates(x, y) || this.board[x][y].isMarked) {
 			return false;
 		}
@@ -154,6 +152,10 @@ class Gameboard {
 
 		let cell = this.board[x][y];
 		return cell.toggleMark();
+	}
+
+	getCoordinates(canvasX, canvasY) {
+		return [Math.floor(canvasX/this.cellSize), Math.floor(canvasY/this.cellSize)];
 	}
 
 	convertForTenserflow() {

@@ -7,8 +7,7 @@ function main() {
       height,
       padding = 50;
 
-  let gameboard = new Gameboard(10, 10, 10);
-  console.log(new Solver(gameboard));
+  let gameboard = new Gameboard(8, 8, 10);
   resizeCanvas();
 
   canvas.addEventListener("click", onclick);
@@ -16,17 +15,24 @@ function main() {
   canvas.addEventListener("mousemove",
     event => gameboard.highlight(context, event.clientX - padding, event.clientY - padding));
   window.addEventListener("resize", resizeCanvas);
+  document.addEventListener("keypress", (event) => {
+    if(event.key === "s") {
+      let solver = new Solver(gameboard);
+      solver.solve();
+      drawGameboard();
+    }
+  });
 
   function onclick(event) {
     let x = event.clientX - padding,
         y = event.clientY - padding;
     if(event.button == 0) {
-      gameboard.doAction(x, y);
+      gameboard.doAction(...gameboard.getCoordinates(x, y));
     } else if(event.button == 2) {
       if(gameboard.gameover) {
         gameboard.reset();
       } else {
-        gameboard.markCell(x, y);
+        gameboard.markCell(...gameboard.getCoordinates(x, y));
       }
     }
     drawGameboard();
@@ -35,8 +41,6 @@ function main() {
 
   function drawGameboard() {
     gameboard.draw(context, width-2*padding, height-2*padding);
-    console.log(new Solver(gameboard));
-
   }
 
   function resizeCanvas() {
