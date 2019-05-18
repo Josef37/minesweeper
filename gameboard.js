@@ -49,6 +49,7 @@ class Gameboard {
 		this.won = false;
 		this.unrevealedCells = this.width * this.height;
 		this.createCells();
+		console.clear();
 	}
 
 	iterateNeighbours(x, y, callback) {
@@ -81,7 +82,7 @@ class Gameboard {
 		if(this.gameover || !this.validCoordinates(x, y) || this.board[x][y].isMarked) {
 			return false;
 		}
-		if(this.unrevealedCells == this.width*this.height) {
+		if(this.isInitialState()) {
 			this.createCellsSave(x, y);
 		}
 		let cell = this.board[x][y];
@@ -145,7 +146,6 @@ class Gameboard {
 		if(this.gameover || !this.validCoordinates(x, y)) {
 			return false;
 		}
-
 		let cell = this.board[x][y];
 		return cell.toggleMark();
 	}
@@ -161,6 +161,10 @@ class Gameboard {
 			}
 		}
 		return this.mineCount - markedCellsCount;
+	}
+
+	isInitialState() {
+		return this.unrevealedCells == this.width*this.height;
 	}
 
 	getCoordinates(canvasX, canvasY) {

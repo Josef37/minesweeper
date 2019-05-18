@@ -65,11 +65,13 @@ class Solver {
   }
 
   solve() {
+    if(this.gameboard.isInitialState()) {
+      this.gameboard.doAction(0, 0);
+      return;
+    }
     let {cellsToReveal, cellsToMark} = this.solveWithoutLinkingRules();
-    // TODO Check if first move
     // TODO Solve also when no rules apply to zoned cells
     if(cellsToReveal.size == 0 && cellsToMark.size == 0) {
-      console.log("I'm smart now");
       ({cellsToReveal, cellsToMark} = this.solveWithLinkingRules());
     }
     for(let cell of cellsToReveal) {
@@ -104,8 +106,11 @@ class Solver {
       let numberOfConfigurations = this.mineProbabilitiesInConfiguration(configurations, new Map(), cellValuesSummed, 0);
       cellValuesSummed.forEach((value, cell) => mineProbabilities.set(cell, value/numberOfConfigurations));
     }
-    console.log(mineProbabilities);
+    console.log("Probability map", mineProbabilities);
+    return this.decideAction(mineProbabilities);
+  }
 
+  decideAction(mineProbabilities) {
     let cellLabels = { cellsToReveal: new Set(), cellsToMark: new Set() };
     let leastRisk = Math.min(...mineProbabilities.values());
     if(leastRisk > 0) {
