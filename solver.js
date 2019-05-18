@@ -97,7 +97,7 @@ class Solver {
 
   solveWithLinkingRules() {
     for(let ruleset of this.rulesets) {
-      ruleset.getProbability();
+      console.log(ruleset.calculateCellValues() ? "There is a valid configuration" : "Somehow I can't find anything valid");
       // TODO Beachte ungeöffnete Minen außerhalb der Regeln
     }
   }
@@ -109,30 +109,106 @@ class Solver {
   }
 }
 
+
+
 class Ruleset {
   constructor(rules) {
     this.rules = rules;
-    this.cellToRules = new Multimap();
+    this.cellValues = new Map();
+    // TODO Optimize by only looking at affected cells and rules
+    // this.cellToRules = new Multimap();
+    // for(let rule of this.rules) {
+    //   rule.cells.forEach(cell => this.cellToRules.set(cell, rule));
+    // }
+  }
+
+  calculateCellValues() {
+    if(this.rules.size == 0) {
+      return true;
+    }
+    let validConfigurationFound = false;
+
+    let firstCell = this.rules.values().next().value.cells[0]; // choose one cell belonging to a rule
+    let newRuleset = this.setCellValue(firstCell, 1);
+    if(newRuleset) {
+      validConfigurationFound = !!newRuleset.calculateCellValues();
+    }
+
+    this.cellValues = new Map(); // reset cell values
+    newRuleset = this.setCellValue(firstCell, 0);
+    if(newRuleset) {
+      validConfigurationFound = !!newRuleset.calculateCellValues() || validConfigurationFound;
+    }
+
+    return validConfigurationFound;
+  }
+
+  // return the new set of rules after solving all rules, return false if there is a contradiction
+  setCellValue(cell, value) {
+    let cellValuesToApply = new Map([[cell, value]]),
+        newRuleset = this;
+    while(cellValuesToApply.size > 0) {
+      [cell, value] = cellValuesToApply.entries().next().value;
+      cellValuesToApply.delete(cell);
+      this.cellValues.set(cell, value);
+
+      newRuleset = this.applyRules(cell, value, newRuleset.rules);
+      let newSolvedCellValues = newRuleset.getSolvedCellValues();
+      if(!newSolvedCellValues) {
+        return false;
+      }
+      for([cell, value] of newSolvedCellValues) {
+        if(this.cellValues.has(cell) && this.cellValues.get(cell) != value) {
+          return false;
+        }
+        cellValuesToApply.set(cell, value);
+      }
+    }
+    return newRuleset;
+  }
+
+  applyRules(cell, value, rules) {
+    let newRules = this.copyRules(rules);
+    for(let newRule of newRules) {
+      newRule.updateRule(cell, value);
+      if(newRule.cells.length == 0) {
+        newRules.delete(newRule);
+      }
+    }
+    return new Ruleset(newRules);
+  }
+
+  // return false, if there was a contradiction
+  getSolvedCellValues() {
+    let cellValues = new Map();
     for(let rule of this.rules) {
-      rule.cells.forEach(cell => this.cellToRules.set(cell, rule));
+      if (rule.mineCount < 0 || rule.mineCount > rule.cells.length) {
+        return false;
+      } else if(rule.mineCount == 0) {
+        for(let cell of rule.cells) {
+          if(cellValues.has(cell) && cellValues.get(cell) != 0) {
+            return false;
+          }
+          cellValues.set(cell, 0);
+        }
+      } else if(rule.mineCount == rule.cells.length) {
+        for(let cell of rule.cells) {
+          if(cellValues.has(cell) && cellValues.get(cell) != 1) {
+            return false;
+          }
+          cellValues.set(cell, 1);
+        }
+      }
     }
+    return cellValues;
   }
 
-  // TODO Rename
-  getProbability() {
-    let values = new Map();
-    for(let cell of this.cellToRules.keys()) {
-      values.set(cell, null);
+  copyRules(rules) {
+    let copy = new Set();
+    for(let rule of rules) {
+      copy.add(rule.copy());
     }
-    let firstCell = values.keys().next().value;
-    values.set(firstCell, 0);
-    applyRules(values, this.cellToRules.get(firstCell));
-    values.set(firstCell, 1);
-  }
-
-  // TODO Find a way for rules to incorporate the fixed values
-  applyRules(values, rules) {
-
+    return copy;
   }
 
   [Symbol.iterator]() {
@@ -140,9 +216,23 @@ class Ruleset {
   }
 }
 
+
+
 class Rule {
   constructor(mineCount, cells) {
     this.mineCount = mineCount;
     this.cells = cells;
+  }
+
+  updateRule(cell, value) {
+    let i = this.cells.indexOf(cell);
+    if(i >= 0) {
+      this.mineCount -= value;
+      this.cells.splice(i, 1);
+    }
+  }
+
+  copy() {
+    return new Rule(this.mineCount, this.cells.slice());
   }
 }

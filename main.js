@@ -7,7 +7,7 @@ function main() {
       height,
       padding = 50;
 
-  let gameboard = new Gameboard(8, 8, 10);
+  let gameboard = new Gameboard(3, 3, 3);
   resizeCanvas();
 
   canvas.addEventListener("click", onclick);
