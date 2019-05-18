@@ -116,45 +116,31 @@ class Ruleset {
     this.rules = rules;
     this.cellValues = new Map();
     // TODO Optimize by only looking at affected cells and rules
-    // this.cellToRules = new Multimap();
-    // for(let rule of this.rules) {
-    //   rule.cells.forEach(cell => this.cellToRules.set(cell, rule));
-    // }
   }
 
   calculateCellValues() {
     if(this.rules.size == 0) {
-      return true;
+      return "valid";
     }
     let configurations = [];
 
     let firstCell = this.rules.values().next().value.cells[0]; // choose one cell belonging to a rule
-    // TODO create function for repeated behavior
-    let newRuleset = this.setCellValue(firstCell, 1);
-    if(newRuleset) {
-      let configuration = newRuleset.calculateCellValues();
-      if (configuration === true) {
-        configurations.push(this.cellValues);
-      } else if(configuration) {
-        configurations.push([this.cellValues, configuration]);
+    for(let value of [0,1]) {
+      this.cellValues = new Map();
+      let newRuleset = this.setCellValue(firstCell, value);
+      if(newRuleset != "invalid") {
+        let configuration = newRuleset.calculateCellValues();
+        if (configuration == "valid") {
+          configurations.push(this.cellValues);
+        } else if(configuration != "invalid") {
+          configurations.push([this.cellValues, configuration]);
+        }
       }
     }
-
-    this.cellValues = new Map(); // reset cell values
-    newRuleset = this.setCellValue(firstCell, 0);
-    if(newRuleset) {
-      let configuration = newRuleset.calculateCellValues();
-      if (configuration === true) {
-        configurations.push(this.cellValues);
-      } else if(configuration) {
-        configurations.push([this.cellValues, configuration]);
-      }
-    }
-
-    return configurations.size == 0 ? false : configurations;
+    return configurations.size == 0 ? "invalid" : configurations;
   }
 
-  // return the new set of rules after solving all rules, return false if there is a contradiction
+  // return the new set of rules after solving all rules, return "invalid" if there is a contradiction
   setCellValue(cell, value) {
     let cellValuesToApply = new Map([[cell, value]]),
         newRuleset = this;
@@ -165,12 +151,12 @@ class Ruleset {
 
       newRuleset = this.applyRules(cell, value, newRuleset.rules);
       let newSolvedCellValues = newRuleset.getSolvedCellValues();
-      if(!newSolvedCellValues) {
-        return false;
+      if(newSolvedCellValues == "invalid") {
+        return "invalid";
       }
       for([cell, value] of newSolvedCellValues) {
         if(this.cellValues.has(cell) && this.cellValues.get(cell) != value) {
-          return false;
+          return "invalid";
         }
         cellValuesToApply.set(cell, value);
       }
@@ -189,23 +175,23 @@ class Ruleset {
     return new Ruleset(newRules);
   }
 
-  // return false, if there was a contradiction
+  // return "invalid", if there was a contradiction
   getSolvedCellValues() {
     let cellValues = new Map();
     for(let rule of this.rules) {
       if (rule.mineCount < 0 || rule.mineCount > rule.cells.length) {
-        return false;
+        return "invalid";
       } else if(rule.mineCount == 0) {
         for(let cell of rule.cells) {
           if(cellValues.has(cell) && cellValues.get(cell) != 0) {
-            return false;
+            return "invalid";
           }
           cellValues.set(cell, 0);
         }
       } else if(rule.mineCount == rule.cells.length) {
         for(let cell of rule.cells) {
           if(cellValues.has(cell) && cellValues.get(cell) != 1) {
-            return false;
+            return "invalid";
           }
           cellValues.set(cell, 1);
         }
