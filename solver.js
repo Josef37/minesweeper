@@ -97,7 +97,7 @@ class Solver {
 
   solveWithLinkingRules() {
     for(let ruleset of this.rulesets) {
-      console.log(ruleset.calculateCellValues() ? "There is a valid configuration" : "Somehow I can't find anything valid");
+      console.log(ruleset.calculateCellValues());
       // TODO Beachte ungeöffnete Minen außerhalb der Regeln
     }
   }
@@ -126,21 +126,32 @@ class Ruleset {
     if(this.rules.size == 0) {
       return true;
     }
-    let validConfigurationFound = false;
+    let configurations = [];
 
     let firstCell = this.rules.values().next().value.cells[0]; // choose one cell belonging to a rule
+    // TODO create function for repeated behavior
     let newRuleset = this.setCellValue(firstCell, 1);
     if(newRuleset) {
-      validConfigurationFound = !!newRuleset.calculateCellValues();
+      let configuration = newRuleset.calculateCellValues();
+      if (configuration === true) {
+        configurations.push(this.cellValues);
+      } else if(configuration) {
+        configurations.push([this.cellValues, configuration]);
+      }
     }
 
     this.cellValues = new Map(); // reset cell values
     newRuleset = this.setCellValue(firstCell, 0);
     if(newRuleset) {
-      validConfigurationFound = !!newRuleset.calculateCellValues() || validConfigurationFound;
+      let configuration = newRuleset.calculateCellValues();
+      if (configuration === true) {
+        configurations.push(this.cellValues);
+      } else if(configuration) {
+        configurations.push([this.cellValues, configuration]);
+      }
     }
 
-    return validConfigurationFound;
+    return configurations.size == 0 ? false : configurations;
   }
 
   // return the new set of rules after solving all rules, return false if there is a contradiction
