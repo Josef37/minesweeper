@@ -150,6 +150,19 @@ class Gameboard {
 		return cell.toggleMark();
 	}
 
+	countRemainingMines() {
+		let markedCellsCount = 0;
+		for(let x=0; x<this.width; x++) {
+			for(let y=0; y<this.height; y++) {
+				let cell = this.board[x][y];
+				if(cell.isMarked && !cell.isRevealed) {
+					markedCellsCount++;
+				}
+			}
+		}
+		return this.mineCount - markedCellsCount;
+	}
+
 	getCoordinates(canvasX, canvasY) {
 		return [Math.floor(canvasX/this.cellSize), Math.floor(canvasY/this.cellSize)];
 	}
@@ -199,21 +212,28 @@ class Gameboard {
 	}
 
 	draw(context, width, height) {
-		this.cellSize = Math.floor(Math.min(width/this.width,
-		 																		height/this.height));
+		this.cellSize = Math.floor(Math.min(width/this.width,	(height/1.1)/this.height)); // extra space for count
 		context.clearRect(0, 0, width, height);
+		width = this.width * this.cellSize;
+		height = this.height * this.cellSize;
 		for(let x=0; x<this.width; x++) {
 			for(let y=0; y<this.height; y++) {
 				this.board[x][y].draw(context, x*this.cellSize, y*this.cellSize, this.cellSize, this.gameover);
 			}
 		}
 
+		context.fillStyle = "black";
+		context.textAlign = "right";
+		context.textBaseline = "top";
+		context.font = `${height*0.06}px sans-serif`;
+		context.fillText("Mines remaining: " + this.countRemainingMines(), width, height+height*0.03);
+
 		if(this.gameover) {
 			context.fillStyle = 'rgba(255, 255, 255, 0.8)';
-			context.fillRect(0, 0, this.cellSize*this.width, this.cellSize*this.height);
+			context.fillRect(0, 0, width, height);
 
-			let centerX = this.cellSize * this.width / 2;
-			let centerY = this.cellSize * this.height / 2;
+			let centerX = width / 2;
+			let centerY = height / 2;
 
 			context.fillStyle = "black";
 			context.textAlign = "center";
