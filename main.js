@@ -7,8 +7,9 @@ function main() {
       height,
       padding = 50;
 
+  let gameboard = new Gameboard(5, 5, 4);
   // let gameboard = new Gameboard(8, 8, 10);
-  let gameboard = new Gameboard(16, 16, 40);
+  // let gameboard = new Gameboard(16, 16, 40);
   // let gameboard = new Gameboard(30, 16, 99);
   resizeCanvas();
 

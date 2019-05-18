@@ -3,6 +3,7 @@ class Solver {
     this.gameboard = gameboard;
     this.rulesets = [];
     this.rulesetsFromGameboard();
+    this.action = { cellsToReveal: [0], cellsToMark: [] };
   }
 
   rulesetsFromGameboard() {
@@ -39,10 +40,14 @@ class Solver {
 
   rulesFromGameboard() {
     let rules = [];
+    let unrevealedCells = [];
     for(let x=0; x<this.gameboard.width; x++) {
       for(let y=0; y<this.gameboard.height; y++) {
         let cell = this.gameboard.board[x][y];
         if(!cell.isRevealed) {
+          if(!cell.isMarked) {
+            unrevealedCells.push(x*this.gameboard.height + y);
+          }
           continue;
         }
         let mineCount = cell.mineCount,
@@ -61,43 +66,46 @@ class Solver {
         }
       }
     }
+    rules.push(new Rule(this.gameboard.countRemainingMines(), unrevealedCells));
     return rules;
   }
 
   solve() {
     if(this.gameboard.isInitialState()) {
-      this.gameboard.doAction(0, 0);
+      this.doAction();
       return;
     }
-    let {cellsToReveal, cellsToMark} = this.solveWithoutLinkingRules();
-    // TODO Solve also when no rules apply to zoned cells
-    if(cellsToReveal.size == 0 && cellsToMark.size == 0) {
-      ({cellsToReveal, cellsToMark} = this.solveWithLinkingRules());
+    this.action = this.solveWithoutLinkingRules();
+    if(this.action.cellsToReveal.size == 0 && this.action.cellsToMark.size == 0) {
+      this.action = this.solveWithLinkingRules();
     }
-    for(let cell of cellsToReveal) {
+    this.doAction();
+  }
+
+  doAction() {
+    for(let cell of this.action.cellsToReveal) {
       this.gameboard.doAction(...this.getCoordinates(cell));
     }
-    for(let cell of cellsToMark) {
+    for(let cell of this.action.cellsToMark) {
       this.gameboard.markCell(...this.getCoordinates(cell));
     }
   }
 
   solveWithoutLinkingRules() {
-    let cellLabels = { cellsToReveal: new Set(), cellsToMark: new Set() };
+    let action = { cellsToReveal: new Set(), cellsToMark: new Set() };
     for(let ruleset of this.rulesets) {
       for(let rule of ruleset) {
         if(rule.mineCount == 0) {
-          rule.cells.forEach(cell => cellLabels.cellsToReveal.add(cell));
+          rule.cells.forEach(cell => action.cellsToReveal.add(cell));
         }
         if(rule.mineCount == rule.cells.length) {
-          rule.cells.forEach(cell => cellLabels.cellsToMark.add(cell));
+          rule.cells.forEach(cell => action.cellsToMark.add(cell));
         }
       }
     }
-    return cellLabels;
+    return action;
   }
 
-  // TODO Consider unopened mines outside of rules
   solveWithLinkingRules() {
     let mineProbabilities = new Map();
     for(let ruleset of this.rulesets) {
@@ -111,25 +119,25 @@ class Solver {
   }
 
   decideAction(mineProbabilities) {
-    let cellLabels = { cellsToReveal: new Set(), cellsToMark: new Set() };
+    let action = { cellsToReveal: new Set(), cellsToMark: new Set() };
     let leastRisk = Math.min(...mineProbabilities.values());
     if(leastRisk > 0) {
       console.log("Now guessing with chance of failure of", leastRisk);
       for(let [cell, value] of mineProbabilities) {
         if(value == leastRisk) {
-          cellLabels.cellsToReveal.add(cell);
-          return cellLabels;
+          action.cellsToReveal.add(cell);
+          return action;
         }
       }
     }
     for(let [cell, value] of mineProbabilities) {
       if(value == 0) {
-        cellLabels.cellsToReveal.add(cell);
+        action.cellsToReveal.add(cell);
       } else if (value == 1) {
-        cellLabels.cellsToMark.add(cell);
+        action.cellsToMark.add(cell);
       }
     }
-    return cellLabels;
+    return action;
   }
 
   cellValuesInConfiguration(configurations, cellValues) {
