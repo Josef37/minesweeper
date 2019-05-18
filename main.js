@@ -7,7 +7,13 @@ function main() {
       height,
       padding = 50;
 
-  let gameboard = new Gameboard(8, 8, 10);
+  // let gameboard = new Gameboard(8, 8, 10);
+  // let gameboard = new Gameboard(16, 16, 40);
+  let gameboard = new Gameboard(30, 16, 99);
+  // let gameboard = new Gameboard(5, 5, 2);
+  // gameboard.mineCount = 2;
+  // gameboard.createCellsFromArray([false, true, false, true, false].concat(Array(20).fill(false)));
+  // gameboard.doAction(2,2);
   resizeCanvas();
 
   canvas.addEventListener("click", onclick);
@@ -16,7 +22,7 @@ function main() {
     event => gameboard.highlight(context, event.clientX - padding, event.clientY - padding));
   window.addEventListener("resize", resizeCanvas);
   document.addEventListener("keypress", (event) => {
-    if(event.key === "s") {
+    if(event.key === "s" && !gameboard.gameover) {
       let solver = new Solver(gameboard);
       solver.solve();
       drawGameboard();

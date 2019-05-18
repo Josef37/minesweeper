@@ -52,7 +52,7 @@ class Solver {
             if(neighbour.isMarked) {
               mineCount--;
             } else {
-              cells.push(neighbourX*this.gameboard.width + neighbourY);
+              cells.push(neighbourX*this.gameboard.height + neighbourY);
             }
           }
         });
@@ -65,75 +65,102 @@ class Solver {
   }
 
   solve() {
-    let {saveCells, mineCells} = this.solveWithoutLinkingRules();
+    let {cellsToReveal, cellsToMark} = this.solveWithoutLinkingRules();
     // TODO Check if first move
     // TODO Solve also when no rules apply to zoned cells
-    if(saveCells.size == 0 && mineCells.size == 0) {
+    if(cellsToReveal.size == 0 && cellsToMark.size == 0) {
       console.log("I'm smart now");
-      ({saveCells, mineCells} = this.solveWithLinkingRules());
+      ({cellsToReveal, cellsToMark} = this.solveWithLinkingRules());
     }
-    for(let cell of saveCells) {
+    for(let cell of cellsToReveal) {
       this.gameboard.doAction(...this.getCoordinates(cell));
     }
-    for(let cell of mineCells) {
+    for(let cell of cellsToMark) {
       this.gameboard.markCell(...this.getCoordinates(cell));
     }
   }
 
   solveWithoutLinkingRules() {
-    let cellLabels = { saveCells: new Set(), mineCells: new Set() };
+    let cellLabels = { cellsToReveal: new Set(), cellsToMark: new Set() };
     for(let ruleset of this.rulesets) {
       for(let rule of ruleset) {
         if(rule.mineCount == 0) {
-          rule.cells.forEach(cell => cellLabels.saveCells.add(cell));
+          rule.cells.forEach(cell => cellLabels.cellsToReveal.add(cell));
         }
         if(rule.mineCount == rule.cells.length) {
-          rule.cells.forEach(cell => cellLabels.mineCells.add(cell));
+          rule.cells.forEach(cell => cellLabels.cellsToMark.add(cell));
         }
       }
     }
     return cellLabels;
   }
 
-  // TODO Beachte ungeöffnete Minen außerhalb der Regeln
+  // TODO Consider unopened mines outside of rules
   solveWithLinkingRules() {
-    let cellLabels = { saveCells: new Set(), mineCells: new Set() };
+    let mineProbabilities = new Map();
     for(let ruleset of this.rulesets) {
-      let configurations = ruleset.calculateCellValues();
-      let cellValues = new Map();
-      this.cellValuesInConfiguration(configurations, cellValues);
-      for(let [cell, value] of cellValues) {
-        if(value == 0) {
-          cellLabels.saveCells.add(cell);
-        } else if (value == 1) {
-          cellLabels.mineCells.add(cell);
+      let configurations = new Configuration(ruleset.calculateCellValues(), new Map());
+      let cellValuesSummed = new Map();
+      let numberOfConfigurations = this.mineProbabilitiesInConfiguration(configurations, new Map(), cellValuesSummed, 0);
+      cellValuesSummed.forEach((value, cell) => mineProbabilities.set(cell, value/numberOfConfigurations));
+    }
+    console.log(mineProbabilities);
+
+    let cellLabels = { cellsToReveal: new Set(), cellsToMark: new Set() };
+    let leastRisk = Math.min(...mineProbabilities.values());
+    if(leastRisk > 0) {
+      console.log("Now guessing with chance of failure of", leastRisk);
+      for(let [cell, value] of mineProbabilities) {
+        if(value == leastRisk) {
+          cellLabels.cellsToReveal.add(cell);
+          return cellLabels;
         }
+      }
+    }
+    for(let [cell, value] of mineProbabilities) {
+      if(value == 0) {
+        cellLabels.cellsToReveal.add(cell);
+      } else if (value == 1) {
+        cellLabels.cellsToMark.add(cell);
       }
     }
     return cellLabels;
   }
 
   cellValuesInConfiguration(configurations, cellValues) {
-    for(let configuration of configurations) {
-      if(Array.isArray(configuration)) {
-        this.cellValuesInConfiguration(configuration, cellValues);
+    for(let [cell, value] of configurations.cellValues.entries()) {
+      if(!cellValues.has(cell)) {
+        cellValues.set(cell, value);
         continue;
       }
-      for(let [cell, value] of configuration.entries()) {
-        if(!cellValues.has(cell)) {
-          cellValues.set(cell, value);
-          continue;
-        }
-        if(cellValues.get(cell) != value) {
-          cellValues.set(cell, "inconsistent");
-        }
+      if(cellValues.get(cell) != value) {
+        cellValues.set(cell, "inconsistent");
       }
+    }
+    for(let configuration of configurations) {
+      this.cellValuesInConfiguration(configuration, cellValues);
     }
   }
 
+  mineProbabilitiesInConfiguration(configurations, cellValues, cellValuesSummed, numberOfConfigurations) {
+    for(let [cell, value] of configurations.cellValues.entries()) {
+      cellValues.set(cell, value);
+    }
+    if(configurations.isLast()) {
+      for(let [cell, value] of cellValues.entries()) {
+        cellValuesSummed.set(cell, value + (cellValuesSummed.get(cell) || 0));
+      }
+      return numberOfConfigurations+1;
+    }
+    for(let configuration of configurations) {
+      numberOfConfigurations = this.mineProbabilitiesInConfiguration(configuration, cellValues, cellValuesSummed, numberOfConfigurations);
+    }
+    return numberOfConfigurations;
+  }
+
   getCoordinates(index) {
-    let x = Math.floor(index / this.gameboard.width),
-        y = index % this.gameboard.width;
+    let x = Math.floor(index / this.gameboard.height),
+        y = index % this.gameboard.height;
     return [x, y];
   }
 }
@@ -149,20 +176,17 @@ class Ruleset {
 
   calculateCellValues() {
     if(this.rules.size == 0) {
-      return "valid";
+      return [];
     }
     let configurations = [];
-
     let firstCell = this.rules.values().next().value.cells[0]; // choose one cell belonging to a rule
     for(let value of [0,1]) {
       this.cellValues = new Map();
       let newRuleset = this.setCellValue(firstCell, value);
       if(newRuleset != "invalid") {
-        let configuration = newRuleset.calculateCellValues();
-        if (configuration == "valid") {
-          configurations.push(this.cellValues);
-        } else if(configuration != "invalid") {
-          configurations.push([this.cellValues, configuration]);
+        let subConfigurations = newRuleset.calculateCellValues();
+        if(subConfigurations != "invalid") {
+          configurations.push(new Configuration(subConfigurations, this.cellValues));
         }
       }
     }
@@ -239,6 +263,23 @@ class Ruleset {
 
   [Symbol.iterator]() {
     return this.rules.values();
+  }
+}
+
+
+
+class Configuration {
+  constructor(subConfigurations, cellValues) {
+    this.subConfigurations = subConfigurations;
+    this.cellValues = cellValues;
+  }
+
+  isLast() {
+    return this.subConfigurations.length == 0;
+  }
+
+  [Symbol.iterator]() {
+    return this.subConfigurations.values();
   }
 }
 
