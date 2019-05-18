@@ -3,7 +3,6 @@ class Solver {
     this.gameboard = gameboard;
     this.rulesets = [];
     this.rulesetsFromGameboard();
-    console.log(this);
   }
 
   rulesetsFromGameboard() {
@@ -67,38 +66,68 @@ class Solver {
 
   solve() {
     let {saveCells, mineCells} = this.solveWithoutLinkingRules();
-    if(saveCells.size > 0 || mineCells.size > 0) {
-      for(let cell of saveCells) {
-        this.gameboard.doAction(...this.getCoordinates(cell));
-      }
-      for(let cell of mineCells) {
-        this.gameboard.markCell(...this.getCoordinates(cell));
-      }
-    } else {
-      this.solveWithLinkingRules();
+    // TODO Check if first move
+    // TODO Solve also when no rules apply to zoned cells
+    if(saveCells.size == 0 && mineCells.size == 0) {
+      console.log("I'm smart now");
+      ({saveCells, mineCells} = this.solveWithLinkingRules());
+    }
+    for(let cell of saveCells) {
+      this.gameboard.doAction(...this.getCoordinates(cell));
+    }
+    for(let cell of mineCells) {
+      this.gameboard.markCell(...this.getCoordinates(cell));
     }
   }
 
   solveWithoutLinkingRules() {
-    let saveCells = new Set(),
-        mineCells = new Set();
+    let cellLabels = { saveCells: new Set(), mineCells: new Set() };
     for(let ruleset of this.rulesets) {
       for(let rule of ruleset) {
         if(rule.mineCount == 0) {
-          rule.cells.forEach(cell => saveCells.add(cell));
+          rule.cells.forEach(cell => cellLabels.saveCells.add(cell));
         }
         if(rule.mineCount == rule.cells.length) {
-          rule.cells.forEach(cell => mineCells.add(cell));
+          rule.cells.forEach(cell => cellLabels.mineCells.add(cell));
         }
       }
     }
-    return { saveCells: saveCells, mineCells: mineCells };
+    return cellLabels;
   }
 
+  // TODO Beachte ungeöffnete Minen außerhalb der Regeln
   solveWithLinkingRules() {
+    let cellLabels = { saveCells: new Set(), mineCells: new Set() };
     for(let ruleset of this.rulesets) {
-      console.log(ruleset.calculateCellValues());
-      // TODO Beachte ungeöffnete Minen außerhalb der Regeln
+      let configurations = ruleset.calculateCellValues();
+      let cellValues = new Map();
+      this.cellValuesInConfiguration(configurations, cellValues);
+      for(let [cell, value] of cellValues) {
+        if(value == 0) {
+          cellLabels.saveCells.add(cell);
+        } else if (value == 1) {
+          cellLabels.mineCells.add(cell);
+        }
+      }
+    }
+    return cellLabels;
+  }
+
+  cellValuesInConfiguration(configurations, cellValues) {
+    for(let configuration of configurations) {
+      if(Array.isArray(configuration)) {
+        this.cellValuesInConfiguration(configuration, cellValues);
+        continue;
+      }
+      for(let [cell, value] of configuration.entries()) {
+        if(!cellValues.has(cell)) {
+          cellValues.set(cell, value);
+          continue;
+        }
+        if(cellValues.get(cell) != value) {
+          cellValues.set(cell, "inconsistent");
+        }
+      }
     }
   }
 
