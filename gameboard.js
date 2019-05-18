@@ -171,22 +171,6 @@ class Gameboard {
 		return 0 <= x && x < this.width && 0 <= y && y < this.height;
 	}
 
-	convertForTenserflow() {
-		let tensor = [];
-		for(let x=0; x<this.width; x++) {
-			tensor[x] = []
-			for(let y=0; y<this.height; y++) {
-				let cell = this.board[x][y];
-				if(!cell.isRevealed) {
-					tensor[x][y] = -1;
-				} else {
-					tensor[x][y] = cell.mineCount;
-				}
-			}
-		}
-		return tensor;
-	}
-
 	highlight(context, x, y) {
 		x = Math.floor(x/this.cellSize);
 		y = Math.floor(y/this.cellSize);
