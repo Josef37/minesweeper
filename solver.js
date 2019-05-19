@@ -116,9 +116,9 @@ class Solver {
       }
     }
     for(let [cell, value] of mineProbabilityMap) {
-      if(value == 0) {
+      if(Math.abs(value - 0) < Number.EPSILON) {
         action.cellsToReveal.add(cell);
-      } else if (value == 1) {
+      } else if (Math.abs(value - 1) < Number.EPSILON) {
         action.cellsToMark.add(cell);
       }
     }
