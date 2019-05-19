@@ -46,7 +46,7 @@ class Solver {
         let cell = this.gameboard.board[x][y];
         if(!cell.isRevealed) {
           if(!cell.isMarked) {
-            unrevealedCells.push(x*this.gameboard.height + y);
+            unrevealedCells.push(Utils.getIndex(x, y, this.gameboard.width));
           }
           continue;
         }
@@ -57,7 +57,7 @@ class Solver {
             if(neighbour.isMarked) {
               mineCount--;
             } else {
-              cells.push(neighbourX*this.gameboard.height + neighbourY);
+              cells.push(Utils.getIndex(neighbourX, neighbourY, this.gameboard.width));
             }
           }
         });
@@ -71,23 +71,26 @@ class Solver {
   }
 
   solve() {
+    this.computeAction();
+    this.doAction();
+  }
+
+  computeAction() {
     if(this.gameboard.isInitialState()) {
-      this.doAction();
       return;
     }
     this.action = this.solveWithoutLinkingRules();
     if(this.action.cellsToReveal.size == 0 && this.action.cellsToMark.size == 0) {
-      this.action = this.solveWithLinkingRules();
+      this.action = this.decideAction(this.computeProbabilityMap());
     }
-    this.doAction();
   }
 
   doAction() {
     for(let cell of this.action.cellsToReveal) {
-      this.gameboard.doAction(...this.getCoordinates(cell));
+      this.gameboard.doAction(...Utils.getCoordinates(cell, this.gameboard.width));
     }
     for(let cell of this.action.cellsToMark) {
-      this.gameboard.markCell(...this.getCoordinates(cell));
+      this.gameboard.markCell(...Utils.getCoordinates(cell, this.gameboard.width));
     }
   }
 
@@ -106,31 +109,31 @@ class Solver {
     return action;
   }
 
-  solveWithLinkingRules() {
-    let mineProbabilities = new Map();
+  computeProbabilityMap() {
+    let mineProbabilityMap = new Map();
     for(let ruleset of this.rulesets) {
       let configurations = new Configuration(ruleset.calculateCellValues(), new Map());
       let cellValuesSummed = new Map();
       let numberOfConfigurations = this.mineProbabilitiesInConfiguration(configurations, new Map(), cellValuesSummed, 0);
-      cellValuesSummed.forEach((value, cell) => mineProbabilities.set(cell, value/numberOfConfigurations));
+      cellValuesSummed.forEach((value, cell) => mineProbabilityMap.set(cell, value/numberOfConfigurations));
     }
-    console.log("Probability map", mineProbabilities);
-    return this.decideAction(mineProbabilities);
+    console.log("Probability map", mineProbabilityMap);
+    return mineProbabilityMap;
   }
 
-  decideAction(mineProbabilities) {
+  decideAction(mineProbabilityMap) {
     let action = { cellsToReveal: new Set(), cellsToMark: new Set() };
-    let leastRisk = Math.min(...mineProbabilities.values());
+    let leastRisk = Math.min(...mineProbabilityMap.values());
     if(leastRisk > 0) {
       console.log("Now guessing with chance of failure of", leastRisk);
-      for(let [cell, value] of mineProbabilities) {
+      for(let [cell, value] of mineProbabilityMap) {
         if(value == leastRisk) {
           action.cellsToReveal.add(cell);
           return action;
         }
       }
     }
-    for(let [cell, value] of mineProbabilities) {
+    for(let [cell, value] of mineProbabilityMap) {
       if(value == 0) {
         action.cellsToReveal.add(cell);
       } else if (value == 1) {
@@ -169,12 +172,6 @@ class Solver {
       numberOfConfigurations = this.mineProbabilitiesInConfiguration(configuration, cellValues, cellValuesSummed, numberOfConfigurations);
     }
     return numberOfConfigurations;
-  }
-
-  getCoordinates(index) {
-    let x = Math.floor(index / this.gameboard.height),
-        y = index % this.gameboard.height;
-    return [x, y];
   }
 }
 

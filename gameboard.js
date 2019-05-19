@@ -25,7 +25,7 @@ class Gameboard {
 		let hasMine = Array(this.mineCount).fill(true).concat(
 									Array(this.width*this.height - this.mineCount - 1).fill(false));
 		Utils.shuffle(hasMine);
-		hasMine.splice(x*this.height + y, 0, false);
+		hasMine.splice(Utils.getIndex(x, y, this.width), 0, false);
 		this.createCellsFromArray(hasMine);
 	}
 
@@ -33,7 +33,7 @@ class Gameboard {
 		for(let x=0; x<this.width; x++) {
 			this.board[x] = [];
 			for(let y=0; y<this.height; y++) {
-				this.board[x][y] = new Cell(hasMine[x*this.height + y]);
+				this.board[x][y] = new Cell(hasMine[Utils.getIndex(x, y, this.width)]);
 			}
 		}
 
@@ -232,5 +232,19 @@ class Gameboard {
 			context.font = `${height*0.03}px sans-serif`;
 			context.fillText('(right-click to restart)', centerX, centerY + 0.025*height);
 		}
+	}
+
+	drawProbabilityMap(context, width, height, mineProbabilityMap) {
+		this.draw(context, width, height);
+		for(let [cell, mineProbability] of mineProbabilityMap.entries()) {
+      let [x,y] = Utils.getCoordinates(cell, this.width);
+      context.fillStyle = `rgba(0,0,0,${mineProbability})`;
+      context.fillRect(x*this.cellSize, y*this.cellSize, this.cellSize, this.cellSize);
+      context.fillStyle = "black";
+      context.textAlign = "center";
+      context.textBaseline = "middle";
+      context.font = `${this.cellSize*0.4}px sans-serif`;
+      context.fillText(mineProbability.toFixed(2), (x+0.5)*this.cellSize, (y+0.5)*this.cellSize);
+    }
 	}
 }

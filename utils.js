@@ -6,6 +6,16 @@ class Utils {
       }
       return a;
   }
+
+  static getIndex(x, y, width) {
+    return x + y*width;
+  }
+
+  static getCoordinates(index, width) {
+    let x = index % width,
+        y = Math.floor(index / width);
+    return [x, y];
+  }
 }
 
 class Multimap {

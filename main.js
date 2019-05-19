@@ -11,18 +11,21 @@ function main() {
   // let gameboard = new Gameboard(8, 8, 10);
   // let gameboard = new Gameboard(16, 16, 40);
   // let gameboard = new Gameboard(30, 16, 99);
+  let solver = new Solver(gameboard);
   resizeCanvas();
 
   canvas.addEventListener("click", onclick);
   canvas.addEventListener("contextmenu", onclick);
-  canvas.addEventListener("mousemove",
-    event => gameboard.highlight(context, event.clientX - padding, event.clientY - padding));
+  canvas.addEventListener("mousemove", event => gameboard.highlight(context, event.clientX - padding, event.clientY - padding));
   window.addEventListener("resize", resizeCanvas);
   document.addEventListener("keypress", (event) => {
-    if(event.key === "s" && !gameboard.gameover) {
-      let solver = new Solver(gameboard);
+    if(event.key == "s" && !gameboard.gameover) {
+      solver = new Solver(gameboard);
       solver.solve();
       drawGameboard();
+    } else if (event.key == "p" && !gameboard.gameover) {
+      solver = new Solver(gameboard);
+      drawProbabilityMap(solver.computeProbabilityMap());
     }
   });
 
@@ -44,6 +47,10 @@ function main() {
 
   function drawGameboard() {
     gameboard.draw(context, width-2*padding, height-2*padding);
+  }
+
+  function drawProbabilityMap(mineProbabilityMap) {
+    gameboard.drawProbabilityMap(context, width-2*padding, height-2*padding, mineProbabilityMap);
   }
 
   function resizeCanvas() {
