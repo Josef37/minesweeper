@@ -195,6 +195,9 @@ class Ruleset {
       this.cellValues.set(cell, value);
 
       newRuleset = this.applyRules(cell, value, newRuleset.rules);
+      if(newRuleset == "invalid") {
+        return "invalid";
+      }
       let newSolvedCellValues = newRuleset.getSolvedCellValues();
       if(newSolvedCellValues == "invalid") {
         return "invalid";
@@ -209,10 +212,13 @@ class Ruleset {
     return newRuleset;
   }
 
+  // return "invalid", if there is a contradiction to a rule
   applyRules(cell, value, rules) {
     let newRules = this.copyRules(rules);
     for(let newRule of newRules) {
-      newRule.updateRule(cell, value);
+      if(!newRule.updateRule(cell, value)) {
+        return "invalid";
+      }
       if(newRule.cells.length == 0) {
         newRules.delete(newRule);
       }
@@ -224,9 +230,7 @@ class Ruleset {
   getSolvedCellValues() {
     let cellValues = new Map();
     for(let rule of this.rules) {
-      if (rule.mineCount < 0 || rule.mineCount > rule.cells.length) {
-        return "invalid";
-      } else if(rule.mineCount == 0) {
+      if(rule.mineCount == 0) {
         for(let cell of rule.cells) {
           if(cellValues.has(cell) && cellValues.get(cell) != 0) {
             return "invalid";
@@ -283,12 +287,17 @@ class Rule {
     this.cells = cells;
   }
 
+  isValid() {
+    return 0 <= this.mineCount && this.mineCount <= this.cells.length;
+  }
+
   updateRule(cell, value) {
     let i = this.cells.indexOf(cell);
     if(i >= 0) {
       this.mineCount -= value;
       this.cells.splice(i, 1);
     }
+    return this.isValid();
   }
 
   copy() {
