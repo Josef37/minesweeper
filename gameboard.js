@@ -8,6 +8,7 @@ class Gameboard {
 		this.cellSize;
 		this.gameover = false;
 		this.won = false;
+		this.noHighlighting = false;
 		this.highlightedX = -1;
 		this.highlightedY = -1;
 		this.createCells();
@@ -176,6 +177,9 @@ class Gameboard {
 	}
 
 	highlight(context, x, y) {
+		if(this.noHighlighting) {
+			return;
+		}
 		x = Math.floor(x/this.cellSize);
 		y = Math.floor(y/this.cellSize);
 		if(this.gameover) {
@@ -200,6 +204,7 @@ class Gameboard {
 	}
 
 	draw(context, width, height) {
+		this.noHighlighting = false;
 		this.cellSize = Math.floor(Math.min(width/this.width,	(height/1.1)/this.height)); // extra space for count
 		context.clearRect(0, 0, width, height);
 		width = this.width * this.cellSize;
@@ -235,7 +240,9 @@ class Gameboard {
 	}
 
 	drawProbabilityMap(context, width, height, mineProbabilityMap) {
+		this.highlight(context, -1, -1); // unset highlight
 		this.draw(context, width, height);
+		this.noHighlighting = true;
 		for(let [cell, mineProbability] of mineProbabilityMap.entries()) {
       let [x,y] = Utils.getCoordinates(cell, this.width);
       context.fillStyle = `rgba(0,0,0,${mineProbability})`;
