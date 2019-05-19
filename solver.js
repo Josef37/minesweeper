@@ -79,10 +79,7 @@ class Solver {
     if(this.gameboard.isInitialState()) {
       return;
     }
-    this.action = this.solveWithoutLinkingRules();
-    if(this.action.cellsToReveal.size == 0 && this.action.cellsToMark.size == 0) {
-      this.action = this.decideAction(this.computeProbabilityMap());
-    }
+    this.action = this.decideAction(this.computeProbabilityMap());
   }
 
   doAction() {
@@ -92,21 +89,6 @@ class Solver {
     for(let cell of this.action.cellsToMark) {
       this.gameboard.markCell(...Utils.getCoordinates(cell, this.gameboard.width));
     }
-  }
-
-  solveWithoutLinkingRules() {
-    let action = { cellsToReveal: new Set(), cellsToMark: new Set() };
-    for(let ruleset of this.rulesets) {
-      for(let rule of ruleset) {
-        if(rule.mineCount == 0) {
-          rule.cells.forEach(cell => action.cellsToReveal.add(cell));
-        }
-        if(rule.mineCount == rule.cells.length) {
-          rule.cells.forEach(cell => action.cellsToMark.add(cell));
-        }
-      }
-    }
-    return action;
   }
 
   computeProbabilityMap() {
