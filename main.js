@@ -11,7 +11,6 @@ function main() {
   // let gameboard = new Gameboard(8, 8, 10);
   // let gameboard = new Gameboard(16, 16, 40);
   let gameboard = new Gameboard(30, 16, 99);
-  let solver = new Solver(gameboard);
   resizeCanvas();
 
   canvas.addEventListener("click", onclick);
