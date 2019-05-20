@@ -1,5 +1,5 @@
 class Utils {
-  static shuffle(a) {
+  static shuffle(a: any[]) {
     for (let i = a.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [a[i], a[j]] = [a[j], a[i]];
@@ -7,18 +7,18 @@ class Utils {
     return a;
   }
 
-  static getIndex(x, y, width) {
+  static getIndex(x: number, y: number, width: number) {
     return x + y * width;
   }
 
-  static getCoordinates(index, width) {
+  static getCoordinates(index: number, width: number): [number, number] {
     let x = index % width,
       y = Math.floor(index / width);
     return [x, y];
   }
 
   // TODO replace https://stackoverflow.com/questions/37679987/efficient-computation-of-n-choose-k-in-node-js
-  static choose(n, k) {
+  static choose(n: number, k: number) {
     if (k < 0) return 0;
     if (k === 0) return 1;
     return (n * Utils.choose(n - 1, k - 1)) / k;
@@ -26,11 +26,13 @@ class Utils {
 }
 
 class Multimap {
+  map: Map<any, any>;
+
   constructor() {
     this.map = new Map();
   }
 
-  set(key, value) {
+  set(key: any, value: any) {
     if (this.map.has(key)) {
       this.map.get(key).add(value);
     } else {
@@ -38,11 +40,11 @@ class Multimap {
     }
   }
 
-  get(key) {
+  get(key: any) {
     return this.map.get(key);
   }
 
-  delete(key, value) {
+  delete(key: any, value: any) {
     if (!this.map.has(key)) {
       return false;
     }

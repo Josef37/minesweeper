@@ -1,11 +1,17 @@
 class Solver {
-  constructor(gameboard) {
+  gameboard: Gameboard;
+  rulesets: Ruleset[];
+  cellsWithoutRule: Set<number>;
+  remainingMines: number;
+  action: { cellsToReveal: Set<number>; cellsToMark: Set<number>; };
+
+  constructor(gameboard: Gameboard) {
     this.gameboard = gameboard;
     this.rulesets = [];
     this.cellsWithoutRule = new Set();
     this.remainingMines = gameboard.countRemainingMines();
     this.rulesetsFromGameboard();
-    this.action = { cellsToReveal: [0], cellsToMark: [] };
+    this.action = { cellsToReveal: new Set([0]), cellsToMark: new Set() };
   }
 
   rulesetsFromGameboard() {
@@ -15,7 +21,7 @@ class Solver {
     }
     let undiscoveredCells = new Set();
     for (let rule of rules) {
-      rule.cells.forEach(cell => undiscoveredCells.add(cell));
+      rule.cells.forEach((cell: number) => undiscoveredCells.add(cell));
     }
     // Until each cell was discovered, collect the affected rules connected to that cell
     while (undiscoveredCells.size > 0) {
@@ -30,8 +36,8 @@ class Solver {
           if (rule.cells.includes(cellToCheck)) {  // rule is affeced
             rules.splice(rules.indexOf(rule), 1); // rules are distinct in one ruleset
             affectedRules.add(rule);
-            let newCells = rule.cells.filter(x => undiscoveredCells.has(x));
-            newCells.forEach(newCell => undiscoveredCells.delete(newCell));
+            let newCells = rule.cells.filter((cell: number) => undiscoveredCells.has(cell));
+            newCells.forEach((newCell: number) => undiscoveredCells.delete(newCell));
             cellsToCheck = cellsToCheck.concat(newCells);
           }
         }
@@ -109,13 +115,13 @@ class Solver {
     let mineCountToProbabilityMaps = [],
       combinationsPerMineCounts = [];
     for (let ruleset of this.rulesets) {
-      let configurations = new Configuration(ruleset.calculateCellValues(), new Map());
+      let configurations = new Configuration(<Configuration[]>ruleset.calculateCellValues(), new Map());
       let mineCountToProbabilityMap = new Map();
       let combinationsPerMineCount = new Map();
       this.mineProbabilitiesInConfigurationPerMineCount(configurations, new Map(), mineCountToProbabilityMap, combinationsPerMineCount);
       for (let [mineCount, mineCountMap] of mineCountToProbabilityMap) {
         let combinations = combinationsPerMineCount.get(mineCount);
-        mineCountMap.forEach((value, cell) => mineCountMap.set(cell, value / combinations));
+        mineCountMap.forEach((value: number, cell: number) => mineCountMap.set(cell, value / combinations));
       }
       mineCountToProbabilityMaps.push(mineCountToProbabilityMap);
       combinationsPerMineCounts.push(combinationsPerMineCount);
@@ -127,7 +133,9 @@ class Solver {
     return mineProbabilityMap;
   }
 
-  generateProbabilityMap(mineCountToProbabilityMaps, combinationsPerMineCounts, cellValues, summedCellValues, rulesetIndex = 0, currentCombinations = 1, totalCombinations = 0, minesInConfiguration = 0) {
+  generateProbabilityMap(mineCountToProbabilityMaps: Map<number, Map<number, number>>[],
+    combinationsPerMineCounts: Map<number, number>[], cellValues: Map<number, number>, summedCellValues: Map<number, number>,
+    rulesetIndex = 0, currentCombinations = 1, totalCombinations = 0, minesInConfiguration = 0) {
     if (rulesetIndex == mineCountToProbabilityMaps.length) {
       let minesNotInConfiguration = this.remainingMines - minesInConfiguration;
       currentCombinations *= Utils.choose(this.cellsWithoutRule.size, minesNotInConfiguration);   // TODO what to do about binomials getting huge?
@@ -146,7 +154,8 @@ class Solver {
     return totalCombinations;
   }
 
-  mineProbabilitiesInConfigurationPerMineCount(configurations, cellValues, mineCountToProbabilityMap, combinationsPerMineCount) {
+  mineProbabilitiesInConfigurationPerMineCount(configurations: Configuration,
+    cellValues: Map<number, number>, mineCountToProbabilityMap: Map<number, Map<number, number>>, combinationsPerMineCount: Map<number, number>) {
     for (let [cell, value] of configurations.cellValues.entries()) {
       cellValues.set(cell, value);
     }
@@ -168,7 +177,7 @@ class Solver {
     }
   }
 
-  decideAction(mineProbabilityMap) {
+  decideAction(mineProbabilityMap: Map<number, number>) {
     let action = { cellsToReveal: new Set(), cellsToMark: new Set() };
     let leastRisk = Math.min(...mineProbabilityMap.values());
     if (leastRisk > 0) {

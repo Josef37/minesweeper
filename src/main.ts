@@ -1,16 +1,17 @@
 window.addEventListener('DOMContentLoaded', main);
 
 function main() {
-  let canvas = document.getElementById('gameboard'),
-    context = canvas.getContext('2d'),
-    width,
-    height,
-    padding = 50;
+  let canvas: HTMLCanvasElement = (<HTMLCanvasElement>document.getElementById('gameboard')),
+    context: CanvasRenderingContext2D = canvas.getContext('2d'),
+    width: number,
+    height: number,
+    padding: number = 50;
 
   // let gameboard = new Gameboard(5, 5, 5);
   // let gameboard = new Gameboard(8, 8, 10);
   // let gameboard = new Gameboard(16, 16, 40);
-  let gameboard = new Gameboard(30, 16, 99);
+  let gameboard = new Gameboard(30, 16, 99),
+    solver: Solver;
   resizeCanvas();
 
   canvas.addEventListener("click", onclick);
@@ -30,7 +31,7 @@ function main() {
     console.timeEnd("solver");
   });
 
-  function onclick(event) {
+  function onclick(event: MouseEvent) {
     let x = event.clientX - padding,
       y = event.clientY - padding;
     if (event.button == 0) {
@@ -50,10 +51,10 @@ function main() {
     gameboard.draw(context, width - 2 * padding, height - 2 * padding);
   }
 
-  function drawProbabilityMap(mineProbabilityMap) {
+  function drawProbabilityMap(mineProbabilityMap: Map<number, number>) {
     gameboard.mineProbabilityMap = mineProbabilityMap;
     gameboard.drawProbabilityMap = true;
-    gameboard.draw(context, width - 2 * padding, height - 2 * padding, mineProbabilityMap);
+    gameboard.draw(context, width - 2 * padding, height - 2 * padding);
   }
 
   function resizeCanvas() {

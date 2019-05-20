@@ -1,5 +1,11 @@
 class Cell {
-	constructor(hasMine) {
+  hasMine: boolean;
+  isRevealed: boolean;
+  isMarked: boolean;
+  mineCount: number;
+  highlighted: boolean;
+
+	constructor(hasMine: boolean) {
 		this.hasMine = hasMine;
 		this.isRevealed = false;
 		this.isMarked = false;
@@ -7,7 +13,7 @@ class Cell {
 		this.highlighted = false;
 	}
 
-	setMineCount(mineCount) {
+	setMineCount(mineCount: number) {
 		this.mineCount = mineCount;
 	}
 
@@ -29,7 +35,7 @@ class Cell {
 		return true;
 	}
 
-	draw(context, x, y, size, gameover = false) {
+	draw(context: CanvasRenderingContext2D, x: number, y: number, size: number, gameover = false) {
 		if (this.isRevealed) {
 			context.fillStyle = "#fff";
 		} else if (this.highlighted) {
@@ -54,7 +60,7 @@ class Cell {
 				context.textAlign = "center";
 				context.textBaseline = "middle";
 				context.font = `${size * 0.6}px sans-serif`;
-				context.fillText(this.mineCount, x + size * 0.5, y + size * 0.55, size);
+				context.fillText(this.mineCount.toString(), x + size * 0.5, y + size * 0.55, size);
 			}
 		}
 		if (!this.isRevealed && this.isMarked) {

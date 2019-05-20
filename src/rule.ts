@@ -1,5 +1,8 @@
 class Rule {
-  constructor(mineCount, cells) {
+  mineCount: number;
+  cells: number[];
+
+  constructor(mineCount: number, cells: number[]) {
     this.mineCount = mineCount;
     this.cells = cells;
   }
@@ -8,7 +11,7 @@ class Rule {
     return 0 <= this.mineCount && this.mineCount <= this.cells.length;
   }
 
-  updateRule(cell, value) {
+  updateRule(cell: number, value: number) {
     let i = this.cells.indexOf(cell);
     if (i >= 0) {
       this.mineCount -= value;

@@ -1,5 +1,8 @@
 class Configuration {
-  constructor(subConfigurations, cellValues) {
+  subConfigurations: Configuration[];
+  cellValues: Map<number, number>;
+
+  constructor(subConfigurations: Configuration[], cellValues: Map<number, number>) {
     this.subConfigurations = subConfigurations;
     this.cellValues = cellValues;
   }

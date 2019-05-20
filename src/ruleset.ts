@@ -1,5 +1,8 @@
 class Ruleset {
-  constructor(rules) {
+  rules: Set<Rule>;
+  cellValues: Map<number, number>;
+
+  constructor(rules: Set<Rule>) {
     this.rules = rules;
     this.cellValues = new Map();
     // TODO Optimize by only looking at affected cells and rules
@@ -15,29 +18,29 @@ class Ruleset {
       this.cellValues = new Map();
       let newRuleset = this.setCellValue(firstCell, value);
       if (newRuleset != "invalid") {
-        let subConfigurations = newRuleset.calculateCellValues();
+        let subConfigurations = (<Ruleset>newRuleset).calculateCellValues();
         if (subConfigurations != "invalid") {
-          configurations.push(new Configuration(subConfigurations, this.cellValues));
+          configurations.push(new Configuration(<Configuration[]>subConfigurations, this.cellValues));
         }
       }
     }
-    return configurations.size == 0 ? "invalid" : configurations;
+    return configurations.length == 0 ? "invalid" : configurations;
   }
 
   // return the new set of rules after solving all rules, return "invalid" if there is a contradiction
-  setCellValue(cell, value) {
+  setCellValue(cell: number, value: number) {
     let cellValuesToApply = new Map([[cell, value]]),
-      newRuleset = this;
+      newRuleset: Ruleset | string = this;
     while (cellValuesToApply.size > 0) {
       [cell, value] = cellValuesToApply.entries().next().value;
       cellValuesToApply.delete(cell);
       this.cellValues.set(cell, value);
 
-      newRuleset = this.applyRules(cell, value, newRuleset.rules);
+      newRuleset = this.applyRules(cell, value, (<Ruleset>newRuleset).rules);
       if (newRuleset == "invalid") {
         return "invalid";
       }
-      let newSolvedCellValues = newRuleset.getSolvedCellValues();
+      let newSolvedCellValues =  (<Ruleset>newRuleset).getSolvedCellValues();
       if (newSolvedCellValues == "invalid") {
         return "invalid";
       }
@@ -52,7 +55,7 @@ class Ruleset {
   }
 
   // return "invalid", if there is a contradiction to a rule
-  applyRules(cell, value, rules) {
+  applyRules(cell: number, value: number, rules: Set<Rule>) {
     let newRules = this.copyRules(rules);
     for (let newRule of newRules) {
       if (!newRule.updateRule(cell, value)) {
@@ -88,7 +91,7 @@ class Ruleset {
     return cellValues;
   }
 
-  copyRules(rules) {
+  copyRules(rules: Set<Rule>) {
     let copy = new Set();
     for (let rule of rules) {
       copy.add(rule.copy());
