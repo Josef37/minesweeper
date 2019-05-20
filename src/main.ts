@@ -19,12 +19,15 @@ function main() {
   canvas.addEventListener("mousemove", event => gameboard.highlight(context, event.clientX - padding, event.clientY - padding));
   window.addEventListener("resize", resizeCanvas);
   document.addEventListener("keypress", (event) => {
+    if(gameboard.gameover) {
+      return;
+    }
     console.time("solver");
-    if (event.key == "s" && !gameboard.gameover) {
+    if (event.key == "s") {
       solver = new Solver(gameboard);
       solver.solve();
       drawGameboard();
-    } else if (event.key == "p" && !gameboard.gameover) {
+    } else if (event.key == "p") {
       solver = new Solver(gameboard);
       drawProbabilityMap(solver.computeProbabilityMap());
     }

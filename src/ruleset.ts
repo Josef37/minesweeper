@@ -8,7 +8,7 @@ class Ruleset {
     // TODO Optimize by only looking at affected cells and rules
   }
 
-  calculateCellValues() {
+  calculateCellValues(): Configuration[] | "invalid" {
     if (this.rules.size == 0) {
       return [];
     }
@@ -18,9 +18,9 @@ class Ruleset {
       this.cellValues = new Map();
       let newRuleset = this.setCellValue(firstCell, value);
       if (newRuleset != "invalid") {
-        let subConfigurations = (<Ruleset>newRuleset).calculateCellValues();
+        let subConfigurations = newRuleset.calculateCellValues();
         if (subConfigurations != "invalid") {
-          configurations.push(new Configuration(<Configuration[]>subConfigurations, this.cellValues));
+          configurations.push(new Configuration(subConfigurations, this.cellValues));
         }
       }
     }
@@ -28,19 +28,19 @@ class Ruleset {
   }
 
   // return the new set of rules after solving all rules, return "invalid" if there is a contradiction
-  setCellValue(cell: number, value: number) {
+  setCellValue(cell: number, value: number): Ruleset | "invalid" {
     let cellValuesToApply = new Map([[cell, value]]),
-      newRuleset: Ruleset | string = this;
+      newRuleset: Ruleset | "invalid" = this;
     while (cellValuesToApply.size > 0) {
       [cell, value] = cellValuesToApply.entries().next().value;
       cellValuesToApply.delete(cell);
       this.cellValues.set(cell, value);
 
-      newRuleset = this.applyRules(cell, value, (<Ruleset>newRuleset).rules);
+      newRuleset = this.applyRules(cell, value, newRuleset.rules);
       if (newRuleset == "invalid") {
         return "invalid";
       }
-      let newSolvedCellValues =  (<Ruleset>newRuleset).getSolvedCellValues();
+      let newSolvedCellValues = newRuleset.getSolvedCellValues();
       if (newSolvedCellValues == "invalid") {
         return "invalid";
       }
@@ -55,7 +55,7 @@ class Ruleset {
   }
 
   // return "invalid", if there is a contradiction to a rule
-  applyRules(cell: number, value: number, rules: Set<Rule>) {
+  applyRules(cell: number, value: number, rules: Set<Rule>): Ruleset | "invalid" {
     let newRules = this.copyRules(rules);
     for (let newRule of newRules) {
       if (!newRule.updateRule(cell, value)) {

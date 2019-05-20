@@ -100,6 +100,7 @@ class Solver {
         let mineProbabilityMap = new Map();
         let mineCountToProbabilityMaps = [], combinationsPerMineCounts = [];
         for (let ruleset of this.rulesets) {
+            // there is always at least one valid configuration, when there is any rule 
             let configurations = new Configuration(ruleset.calculateCellValues(), new Map());
             let mineCountToProbabilityMap = new Map();
             let combinationsPerMineCount = new Map();
