@@ -74,7 +74,7 @@ class Gameboard {
     }
     doAction(x, y) {
         this.drawProbabilityMap = false;
-        if (this.gameover || !this.validCoordinates(x, y) || this.board[x][y].isMarked) {
+        if (this.gameover || !this.validCoordinates(x, y) || this.board[x][y].isFlagged) {
             return false;
         }
         if (this.isInitialState() && this.firstActionSave) {
@@ -103,14 +103,14 @@ class Gameboard {
     // returns true, if mine was revealed
     autoRevealCells(x, y, revealedCells) {
         let cell = this.board[x][y];
-        let markedCount = 0;
-        this.iterateNeighbours(x, y, neighbour => markedCount += Number(neighbour.isMarked));
-        if (markedCount != cell.mineCount) {
+        let flaggedCount = 0;
+        this.iterateNeighbours(x, y, neighbour => flaggedCount += Number(neighbour.isFlagged));
+        if (flaggedCount != cell.adjacentMinesCount) {
             return false;
         }
         let mineRevealed = false;
         this.iterateNeighbours(x, y, (neighbour, neighbourX, neighbourY) => {
-            if (!neighbour.isMarked) {
+            if (!neighbour.isFlagged) {
                 mineRevealed = mineRevealed || this.revealCell(neighbourX, neighbourY, revealedCells);
             }
         });
@@ -130,29 +130,29 @@ class Gameboard {
             return true;
         }
         let mineOpened = false;
-        if (cell.mineCount == 0) {
+        if (cell.adjacentMinesCount == 0) {
             this.iterateNeighbours(x, y, (_neighbour, neighbourX, neighbourY) => mineOpened = mineOpened || this.revealCell(neighbourX, neighbourY, revealedCells));
         }
         return mineOpened;
     }
-    markCell(x, y) {
+    flagCell(x, y) {
         if (this.gameover || !this.validCoordinates(x, y)) {
             return false;
         }
         let cell = this.board[x][y];
-        return cell.toggleMark();
+        return cell.toggleFlag();
     }
     countRemainingMines() {
-        let markedCellsCount = 0;
+        let flaggedCellsCount = 0;
         for (let x = 0; x < this.width; x++) {
             for (let y = 0; y < this.height; y++) {
                 let cell = this.board[x][y];
-                if (cell.isMarked && !cell.isRevealed) {
-                    markedCellsCount++;
+                if (cell.isFlagged && !cell.isRevealed) {
+                    flaggedCellsCount++;
                 }
             }
         }
-        return this.mineCount - markedCellsCount;
+        return this.mineCount - flaggedCellsCount;
     }
     isInitialState() {
         return this.unrevealedCells == this.width * this.height;
@@ -176,7 +176,7 @@ class Gameboard {
             return;
         }
         if (this.validCoordinates(this.highlightedX, this.highlightedY)) {
-            this.board[this.highlightedX][this.highlightedY].highlighted = false;
+            this.board[this.highlightedX][this.highlightedY].isHighlighted = false;
             this.board[this.highlightedX][this.highlightedY]
                 .draw(context, this.highlightedX * this.cellSize, this.highlightedY * this.cellSize, this.cellSize);
         }
@@ -186,12 +186,12 @@ class Gameboard {
         }
         this.highlightedX = x;
         this.highlightedY = y;
-        this.board[x][y].highlighted = true;
+        this.board[x][y].isHighlighted = true;
         this.board[x][y].draw(context, x * this.cellSize, y * this.cellSize, this.cellSize);
     }
     draw(context, width, height) {
         if (this.drawProbabilityMap && this.validCoordinates(this.highlightedX, this.highlightedY)) { // unset highlight
-            this.board[this.highlightedX][this.highlightedY].highlighted = false;
+            this.board[this.highlightedX][this.highlightedY].isHighlighted = false;
             this.highlightedX = this.highlightedY = -1;
         }
         this.cellSize = Math.floor(Math.min(width / this.width, (height / 1.1) / this.height)); // extra space for count

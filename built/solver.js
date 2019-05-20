@@ -5,7 +5,7 @@ class Solver {
         this.cellsWithoutRule = new Set();
         this.remainingMines = gameboard.countRemainingMines();
         this.rulesetsFromGameboard();
-        this.action = { cellsToReveal: new Set([0]), cellsToMark: new Set() };
+        this.action = { cellsToReveal: new Set([0]), cellsToFlag: new Set() };
     }
     rulesetsFromGameboard() {
         let rules = this.rulesFromGameboard();
@@ -46,10 +46,10 @@ class Solver {
                 if (!cell.isRevealed) {
                     continue;
                 }
-                let mineCount = cell.mineCount, cells = [];
+                let mineCount = cell.adjacentMinesCount, cells = [];
                 this.gameboard.iterateNeighbours(x, y, (neighbour, neighbourX, neighbourY) => {
                     if (!neighbour.isRevealed) {
-                        if (neighbour.isMarked) {
+                        if (neighbour.isFlagged) {
                             mineCount--;
                         }
                         else {
@@ -71,7 +71,7 @@ class Solver {
         for (let x = 0; x < this.gameboard.width; x++) {
             for (let y = 0; y < this.gameboard.height; y++) {
                 let cell = this.gameboard.board[x][y];
-                if (!cell.isRevealed && !cell.isMarked) {
+                if (!cell.isRevealed && !cell.isFlagged) {
                     unsafeCells.add(Utils.getIndex(x, y, this.gameboard.width));
                 }
             }
@@ -92,8 +92,8 @@ class Solver {
         for (let cell of this.action.cellsToReveal) {
             this.gameboard.doAction(...Utils.getCoordinates(cell, this.gameboard.width));
         }
-        for (let cell of this.action.cellsToMark) {
-            this.gameboard.markCell(...Utils.getCoordinates(cell, this.gameboard.width));
+        for (let cell of this.action.cellsToFlag) {
+            this.gameboard.flagCell(...Utils.getCoordinates(cell, this.gameboard.width));
         }
     }
     computeProbabilityMap() {
@@ -157,7 +157,7 @@ class Solver {
         }
     }
     decideAction(mineProbabilityMap) {
-        let action = { cellsToReveal: new Set(), cellsToMark: new Set() };
+        let action = { cellsToReveal: new Set(), cellsToFlag: new Set() };
         let leastRisk = Math.min(...mineProbabilityMap.values());
         if (leastRisk > 0) {
             console.log("Now guessing with chance of failure of", leastRisk);
@@ -175,7 +175,7 @@ class Solver {
                 action.cellsToReveal.add(cell);
             }
             else if (Math.abs(value - 1) < Number.EPSILON) {
-                action.cellsToMark.add(cell);
+                action.cellsToFlag.add(cell);
             }
         }
         return action;

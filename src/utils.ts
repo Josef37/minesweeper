@@ -1,32 +1,38 @@
+// handy utilities
 class Utils {
-  static shuffle(a: any[]) {
-    for (let i = a.length - 1; i > 0; i--) {
+  // modern Fisher–Yates shuffle
+  static shuffle(array: any[]) {
+    for (let i = array.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
+      [array[i], array[j]] = [array[j], array[i]];
     }
-    return a;
+    return array;
   }
 
-  static getIndex(x: number, y: number, width: number) {
-    return x + y * width;
+  // convert coordinates to x-first index (x-first = x is counted up first)
+  static getIndex(x: number, y: number, gridWidth: number) {
+    return x + y * gridWidth;
   }
 
-  static getCoordinates(index: number, width: number): [number, number] {
-    let x = index % width,
-      y = Math.floor(index / width);
+  // convert x-first index to coordinates (x-first = x is counted up first)
+  static getCoordinates(index: number, gridWidth: number): [number, number] {
+    let x = index % gridWidth,
+      y = Math.floor(index / gridWidth);
     return [x, y];
   }
 
   // TODO replace https://stackoverflow.com/questions/37679987/efficient-computation-of-n-choose-k-in-node-js
+  // binomial coefficient "n choose k"
   static choose(n: number, k: number) {
     if (k < 0) return 0;
     if (k === 0) return 1;
-    return (n * Utils.choose(n - 1, k - 1)) / k;
+    return n / k * Utils.choose(n - 1, k - 1);
   }
 }
 
+// map from keys to multiple values
 class Multimap {
-  map: Map<any, any>;
+  map: Map<any, Set<any>>;
 
   constructor() {
     this.map = new Map();
@@ -44,17 +50,18 @@ class Multimap {
     return this.map.get(key);
   }
 
-  delete(key: any, value: any) {
+  delete(key: any, value = null) {
     if (!this.map.has(key)) {
       return false;
     }
-    if (typeof value === "undefined") {
+    if (typeof value == null) {
       return this.map.delete(key);
     } else {
-      if (this.map.get(key).size == 1) {
+      let values = this.map.get(key);
+      if (values.size == 1 && values.has(value)) {
         return this.map.delete(key);
       } else {
-        return this.map.get(key).delete(value);
+        return values.delete(value);
       }
     }
   }

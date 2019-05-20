@@ -43,7 +43,7 @@ function main() {
       if (gameboard.gameover) {
         gameboard.reset();
       } else {
-        gameboard.markCell(...gameboard.getCoordinates(x, y));
+        gameboard.flagCell(...gameboard.getCoordinates(x, y));
       }
     }
     drawGameboard();

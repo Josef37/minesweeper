@@ -36,7 +36,7 @@ function main() {
                 gameboard.reset();
             }
             else {
-                gameboard.markCell(...gameboard.getCoordinates(x, y));
+                gameboard.flagCell(...gameboard.getCoordinates(x, y));
             }
         }
         drawGameboard();

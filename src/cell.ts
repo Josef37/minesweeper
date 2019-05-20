@@ -1,20 +1,14 @@
+// representation of a single cell in the minesweeper grid
 class Cell {
-  hasMine: boolean;
-  isRevealed: boolean;
-  isMarked: boolean;
-  mineCount: number;
-  highlighted: boolean;
+  isRevealed: boolean = false;
+  isFlagged: boolean = false;
+  adjacentMinesCount: number;
+  isHighlighted: boolean = false;
 
-	constructor(hasMine: boolean) {
-		this.hasMine = hasMine;
-		this.isRevealed = false;
-		this.isMarked = false;
-		this.mineCount = -1;
-		this.highlighted = false;
-	}
+	constructor(public hasMine: boolean) {}
 
 	setMineCount(mineCount: number) {
-		this.mineCount = mineCount;
+		this.adjacentMinesCount = mineCount;
 	}
 
 	// return true, if something changes
@@ -27,18 +21,20 @@ class Cell {
 	}
 
 	// return true, if something changes
-	toggleMark() {
+	toggleFlag() {
 		if (this.isRevealed) {
 			return false;
 		}
-		this.isMarked = !this.isMarked;
+		this.isFlagged = !this.isFlagged;
 		return true;
 	}
 
+  // draw square with border and mine, count or flag
 	draw(context: CanvasRenderingContext2D, x: number, y: number, size: number, gameover = false) {
+    // draw square with border
 		if (this.isRevealed) {
 			context.fillStyle = "#fff";
-		} else if (this.highlighted) {
+		} else if (this.isHighlighted) {
 			context.fillStyle = "#ddf";
 		} else {
 			context.fillStyle = "#bbf"
@@ -48,22 +44,23 @@ class Cell {
 		context.lineWidth = size / 20;
 		context.strokeRect(x, y, size, size);
 
+    // draw mine or count for revealed cell
 		if (this.isRevealed || gameover) {
 			if (this.hasMine) {
 				context.fillStyle = "black";
 				context.beginPath();
 				context.arc(x + size / 2, y + size / 2, size / 5, 0, 2 * Math.PI);
 				context.fill();
-			}
-			if (this.mineCount > 0) {
+			} else if (this.adjacentMinesCount > 0) {
 				context.fillStyle = "black";
 				context.textAlign = "center";
 				context.textBaseline = "middle";
 				context.font = `${size * 0.6}px sans-serif`;
-				context.fillText(this.mineCount.toString(), x + size * 0.5, y + size * 0.55, size);
+				context.fillText(this.adjacentMinesCount.toString(), x + size * 0.5, y + size * 0.55, size);
 			}
 		}
-		if (!this.isRevealed && this.isMarked) {
+    // draw flag for flagged cell
+		if (!this.isRevealed && this.isFlagged) {
 			context.fillStyle = "red";
 			context.fillRect(x + size / 4, y + size / 4, size / 2, size / 2);
 		}
