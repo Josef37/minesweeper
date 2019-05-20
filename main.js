@@ -19,6 +19,7 @@ function main() {
   canvas.addEventListener("mousemove", event => gameboard.highlight(context, event.clientX - padding, event.clientY - padding));
   window.addEventListener("resize", resizeCanvas);
   document.addEventListener("keypress", (event) => {
+    console.time("solver");
     if(event.key == "s" && !gameboard.gameover) {
       solver = new Solver(gameboard);
       solver.solve();
@@ -27,6 +28,7 @@ function main() {
       solver = new Solver(gameboard);
       drawProbabilityMap(solver.computeProbabilityMap());
     }
+    console.timeEnd("solver");
   });
 
   function onclick(event) {
@@ -50,7 +52,9 @@ function main() {
   }
 
   function drawProbabilityMap(mineProbabilityMap) {
-    gameboard.drawProbabilityMap(context, width-2*padding, height-2*padding, mineProbabilityMap);
+    gameboard.mineProbabilityMap = mineProbabilityMap;
+    gameboard.drawProbabilityMap = true;
+    gameboard.draw(context, width-2*padding, height-2*padding, mineProbabilityMap);
   }
 
   function resizeCanvas() {

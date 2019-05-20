@@ -8,7 +8,8 @@ class Gameboard {
 		this.cellSize;
 		this.gameover = false;
 		this.won = false;
-		this.noHighlighting = false;
+		this.drawProbabilityMap = false;
+		this.mineProbabilityMap;
 		this.highlightedX = -1;
 		this.highlightedY = -1;
 		this.firstActionSave = true;
@@ -83,6 +84,7 @@ class Gameboard {
 	}
 
 	doAction(x, y) {
+		this.drawProbabilityMap = false;
 		if(this.gameover || !this.validCoordinates(x, y) || this.board[x][y].isMarked) {
 			return false;
 		}
@@ -180,7 +182,7 @@ class Gameboard {
 	}
 
 	highlight(context, x, y) {
-		if(this.noHighlighting) {
+		if(this.drawProbabilityMap) {
 			return;
 		}
 		x = Math.floor(x/this.cellSize);
@@ -207,7 +209,10 @@ class Gameboard {
 	}
 
 	draw(context, width, height) {
-		this.noHighlighting = false;
+		if(this.drawProbabilityMap && this.validCoordinates(this.highlightedX, this.highlightedY)) { // unset highlight
+			this.board[this.highlightedX][this.highlightedY].highlighted = false;
+			this.highlightedX = this.highlightedY = -1;
+		}
 		this.cellSize = Math.floor(Math.min(width/this.width,	(height/1.1)/this.height)); // extra space for count
 		context.clearRect(0, 0, width, height);
 		width = this.width * this.cellSize;
@@ -240,21 +245,18 @@ class Gameboard {
 			context.font = `${height*0.03}px sans-serif`;
 			context.fillText('(right-click to restart)', centerX, centerY + 0.025*height);
 		}
-	}
 
-	drawProbabilityMap(context, width, height, mineProbabilityMap) {
-		this.highlight(context, -1, -1); // unset highlight
-		this.draw(context, width, height);
-		this.noHighlighting = true;
-		for(let [cell, mineProbability] of mineProbabilityMap.entries()) {
-      let [x,y] = Utils.getCoordinates(cell, this.width);
-      context.fillStyle = `rgba(0,0,0,${mineProbability})`;
-      context.fillRect(x*this.cellSize, y*this.cellSize, this.cellSize, this.cellSize);
-      context.fillStyle = "black";
-      context.textAlign = "center";
-      context.textBaseline = "middle";
-      context.font = `${this.cellSize*0.4}px sans-serif`;
-      context.fillText(mineProbability.toFixed(2), (x+0.5)*this.cellSize, (y+0.5)*this.cellSize);
-    }
+		if(this.drawProbabilityMap) {
+			for(let [cell, mineProbability] of this.mineProbabilityMap.entries()) {
+	      let [x,y] = Utils.getCoordinates(cell, this.width);
+	      context.fillStyle = `rgba(0,0,0,${mineProbability/2})`;
+	      context.fillRect(x*this.cellSize, y*this.cellSize, this.cellSize, this.cellSize);
+	      context.fillStyle = "black";
+	      context.textAlign = "center";
+	      context.textBaseline = "middle";
+	      context.font = `${this.cellSize*0.4}px sans-serif`;
+	      context.fillText(mineProbability.toFixed(2), (x+0.5)*this.cellSize, (y+0.5)*this.cellSize);
+	    }
+		}
 	}
 }
