@@ -13,7 +13,7 @@ class Cell {
 
 	// return true, if something changes
 	reveal() {
-		if(this.isRevealed) {
+		if (this.isRevealed) {
 			return false;
 		}
 		this.isRevealed = true;
@@ -22,14 +22,14 @@ class Cell {
 
 	// return true, if something changes
 	toggleMark() {
-		if(this.isRevealed) {
+		if (this.isRevealed) {
 			return false;
 		}
 		this.isMarked = !this.isMarked;
 		return true;
 	}
 
-	draw(context, x, y, size, gameover=false) {
+	draw(context, x, y, size, gameover = false) {
 		if (this.isRevealed) {
 			context.fillStyle = "#fff";
 		} else if (this.highlighted) {
@@ -39,27 +39,27 @@ class Cell {
 		}
 		context.fillRect(x, y, size, size);
 		context.strokeStyle = "black";
-		context.lineWidth = size/20;
+		context.lineWidth = size / 20;
 		context.strokeRect(x, y, size, size);
 
-		if(this.isRevealed || gameover) {
-			if(this.hasMine) {
+		if (this.isRevealed || gameover) {
+			if (this.hasMine) {
 				context.fillStyle = "black";
 				context.beginPath();
-				context.arc(x+size/2, y+size/2, size/5, 0, 2*Math.PI);
+				context.arc(x + size / 2, y + size / 2, size / 5, 0, 2 * Math.PI);
 				context.fill();
 			}
-			if(this.mineCount > 0) {
+			if (this.mineCount > 0) {
 				context.fillStyle = "black";
 				context.textAlign = "center";
 				context.textBaseline = "middle";
-				context.font = `${size*0.6}px sans-serif`;
-				context.fillText(this.mineCount, x + size*0.5, y + size*0.55, size);
+				context.font = `${size * 0.6}px sans-serif`;
+				context.fillText(this.mineCount, x + size * 0.5, y + size * 0.55, size);
 			}
 		}
-		if(!this.isRevealed && this.isMarked) {
+		if (!this.isRevealed && this.isMarked) {
 			context.fillStyle = "red";
-			context.fillRect(x + size/4, y + size/4, size/2, size/2);
+			context.fillRect(x + size / 4, y + size / 4, size / 2, size / 2);
 		}
 	}
 }

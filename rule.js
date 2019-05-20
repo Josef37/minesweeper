@@ -10,7 +10,7 @@ class Rule {
 
   updateRule(cell, value) {
     let i = this.cells.indexOf(cell);
-    if(i >= 0) {
+    if (i >= 0) {
       this.mineCount -= value;
       this.cells.splice(i, 1);
     }

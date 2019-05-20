@@ -1,19 +1,19 @@
 class Utils {
   static shuffle(a) {
     for (let i = a.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [a[i], a[j]] = [a[j], a[i]];
-      }
-      return a;
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
   }
 
   static getIndex(x, y, width) {
-    return x + y*width;
+    return x + y * width;
   }
 
   static getCoordinates(index, width) {
     let x = index % width,
-        y = Math.floor(index / width);
+      y = Math.floor(index / width);
     return [x, y];
   }
 
@@ -21,7 +21,7 @@ class Utils {
   static choose(n, k) {
     if (k < 0) return 0;
     if (k === 0) return 1;
-    return (n * Utils.choose(n-1, k-1)) / k;
+    return (n * Utils.choose(n - 1, k - 1)) / k;
   }
 }
 
@@ -31,7 +31,7 @@ class Multimap {
   }
 
   set(key, value) {
-    if(this.map.has(key)) {
+    if (this.map.has(key)) {
       this.map.get(key).add(value);
     } else {
       this.map.set(key, new Set([value]));
@@ -43,13 +43,13 @@ class Multimap {
   }
 
   delete(key, value) {
-    if(!this.map.has(key)) {
+    if (!this.map.has(key)) {
       return false;
     }
-    if(typeof value === "undefined") {
+    if (typeof value === "undefined") {
       return this.map.delete(key);
     } else {
-      if(this.map.get(key).size == 1) {
+      if (this.map.get(key).size == 1) {
         return this.map.delete(key);
       } else {
         return this.map.get(key).delete(value);

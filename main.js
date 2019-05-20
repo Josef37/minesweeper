@@ -2,10 +2,10 @@ window.addEventListener('DOMContentLoaded', main);
 
 function main() {
   let canvas = document.getElementById('gameboard'),
-      context = canvas.getContext('2d'),
-      width,
-      height,
-      padding = 50;
+    context = canvas.getContext('2d'),
+    width,
+    height,
+    padding = 50;
 
   // let gameboard = new Gameboard(5, 5, 5);
   // let gameboard = new Gameboard(8, 8, 10);
@@ -19,7 +19,7 @@ function main() {
   window.addEventListener("resize", resizeCanvas);
   document.addEventListener("keypress", (event) => {
     console.time("solver");
-    if(event.key == "s" && !gameboard.gameover) {
+    if (event.key == "s" && !gameboard.gameover) {
       solver = new Solver(gameboard);
       solver.solve();
       drawGameboard();
@@ -32,11 +32,11 @@ function main() {
 
   function onclick(event) {
     let x = event.clientX - padding,
-        y = event.clientY - padding;
-    if(event.button == 0) {
+      y = event.clientY - padding;
+    if (event.button == 0) {
       gameboard.doAction(...gameboard.getCoordinates(x, y));
-    } else if(event.button == 2) {
-      if(gameboard.gameover) {
+    } else if (event.button == 2) {
+      if (gameboard.gameover) {
         gameboard.reset();
       } else {
         gameboard.markCell(...gameboard.getCoordinates(x, y));
@@ -47,13 +47,13 @@ function main() {
   }
 
   function drawGameboard() {
-    gameboard.draw(context, width-2*padding, height-2*padding);
+    gameboard.draw(context, width - 2 * padding, height - 2 * padding);
   }
 
   function drawProbabilityMap(mineProbabilityMap) {
     gameboard.mineProbabilityMap = mineProbabilityMap;
     gameboard.drawProbabilityMap = true;
-    gameboard.draw(context, width-2*padding, height-2*padding, mineProbabilityMap);
+    gameboard.draw(context, width - 2 * padding, height - 2 * padding, mineProbabilityMap);
   }
 
   function resizeCanvas() {
