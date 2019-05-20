@@ -48,13 +48,14 @@ class Ruleset {
     }
     // return "invalid", if there is a contradiction to a rule
     applyRules(cell, value, rules) {
-        let newRules = this.copyRules(rules);
-        for (let newRule of newRules) {
-            if (!newRule.updateRule(cell, value)) {
+        let newRules = new Set();
+        for (let rule of rules) {
+            rule = rule.updateRule(cell, value);
+            if (!rule.isValid()) {
                 return "invalid";
             }
-            if (newRule.cells.length == 0) {
-                newRules.delete(newRule);
+            if (!rule.isWaste()) {
+                newRules.add(rule);
             }
         }
         return new Ruleset(newRules);
@@ -63,7 +64,7 @@ class Ruleset {
     getSolvedCellValues() {
         let cellValues = new Map();
         for (let rule of this.rules) {
-            if (rule.mineCount == 0) {
+            if (rule.numberOfMines == 0) {
                 for (let cell of rule.cells) {
                     if (cellValues.has(cell) && cellValues.get(cell) != 0) {
                         return "invalid";
@@ -71,7 +72,7 @@ class Ruleset {
                     cellValues.set(cell, 0);
                 }
             }
-            else if (rule.mineCount == rule.cells.length) {
+            else if (rule.numberOfMines == rule.cells.length) {
                 for (let cell of rule.cells) {
                     if (cellValues.has(cell) && cellValues.get(cell) != 1) {
                         return "invalid";
@@ -81,13 +82,6 @@ class Ruleset {
             }
         }
         return cellValues;
-    }
-    copyRules(rules) {
-        let copy = new Set();
-        for (let rule of rules) {
-            copy.add(rule.copy());
-        }
-        return copy;
     }
     [Symbol.iterator]() {
         return this.rules.values();
