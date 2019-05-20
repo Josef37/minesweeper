@@ -16,6 +16,13 @@ class Utils {
         y = Math.floor(index / width);
     return [x, y];
   }
+
+  // TODO replace https://stackoverflow.com/questions/37679987/efficient-computation-of-n-choose-k-in-node-js
+  static choose(n, k) {
+    if (k < 0) return 0;
+    if (k === 0) return 1;
+    return (n * Utils.choose(n-1, k-1)) / k;
+  }
 }
 
 class Multimap {

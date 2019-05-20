@@ -2,6 +2,8 @@ class Solver {
   constructor(gameboard) {
     this.gameboard = gameboard;
     this.rulesets = [];
+    this.cellsWithoutRule = new Set();
+    this.remainingMines = gameboard.countRemainingMines();
     this.rulesetsFromGameboard();
     this.action = { cellsToReveal: [0], cellsToMark: [] };
   }
@@ -40,14 +42,11 @@ class Solver {
 
   rulesFromGameboard() {
     let rules = [];
-    let unrevealedCells = [];
+    this.cellsWithoutRule = this.getUnsafeCells();
     for(let x=0; x<this.gameboard.width; x++) {
       for(let y=0; y<this.gameboard.height; y++) {
         let cell = this.gameboard.board[x][y];
         if(!cell.isRevealed) {
-          if(!cell.isMarked) {
-            unrevealedCells.push(Utils.getIndex(x, y, this.gameboard.width));
-          }
           continue;
         }
         let mineCount = cell.mineCount,
@@ -57,7 +56,9 @@ class Solver {
             if(neighbour.isMarked) {
               mineCount--;
             } else {
-              cells.push(Utils.getIndex(neighbourX, neighbourY, this.gameboard.width));
+              let neighbourIndex = Utils.getIndex(neighbourX, neighbourY, this.gameboard.width);
+              cells.push(neighbourIndex);
+              this.cellsWithoutRule.delete(neighbourIndex);
             }
           }
         });
@@ -66,8 +67,20 @@ class Solver {
         }
       }
     }
-    rules.push(new Rule(this.gameboard.countRemainingMines(), unrevealedCells));
     return rules;
+  }
+
+  getUnsafeCells() {
+    let unsafeCells = new Set();
+    for(let x=0; x<this.gameboard.width; x++) {
+      for(let y=0; y<this.gameboard.height; y++) {
+        let cell = this.gameboard.board[x][y];
+        if(!cell.isRevealed && !cell.isMarked) {
+          unsafeCells.add(Utils.getIndex(x, y, this.gameboard.width));
+        }
+      }
+    }
+    return unsafeCells;
   }
 
   solve() {
@@ -93,14 +106,66 @@ class Solver {
 
   computeProbabilityMap() {
     let mineProbabilityMap = new Map();
+    let mineCountToProbabilityMaps = [],
+        combinationsPerMineCounts = [];
     for(let ruleset of this.rulesets) {
       let configurations = new Configuration(ruleset.calculateCellValues(), new Map());
-      let cellValuesSummed = new Map();
-      let numberOfConfigurations = this.mineProbabilitiesInConfiguration(configurations, new Map(), cellValuesSummed, 0);
-      cellValuesSummed.forEach((value, cell) => mineProbabilityMap.set(cell, value/numberOfConfigurations));
+      let mineCountToProbabilityMap = new Map();
+      let combinationsPerMineCount = new Map();
+      this.mineProbabilitiesInConfigurationPerMineCount(configurations, new Map(), mineCountToProbabilityMap, combinationsPerMineCount);
+      for(let [mineCount, mineCountMap] of mineCountToProbabilityMap) {
+        let combinations = combinationsPerMineCount.get(mineCount);
+        mineCountMap.forEach((value, cell) => mineCountMap.set(cell, value/combinations));
+      }
+      mineCountToProbabilityMaps.push(mineCountToProbabilityMap);
+      combinationsPerMineCounts.push(combinationsPerMineCount);
     }
-    console.log("Probability map", mineProbabilityMap);
+    let totalCombinations = this.generateProbabilityMap(mineCountToProbabilityMaps, combinationsPerMineCounts, new Map(), mineProbabilityMap);
+    mineProbabilityMap.forEach((value, cell) => mineProbabilityMap.set(cell, value/totalCombinations));
+    let sum = 0;
+    mineProbabilityMap.forEach(value => sum += value);
     return mineProbabilityMap;
+  }
+
+  generateProbabilityMap(mineCountToProbabilityMaps, combinationsPerMineCounts, cellValues, summedCellValues, rulesetIndex=0, currentCombinations=1, totalCombinations=0, minesInConfiguration=0) {
+    if(rulesetIndex == mineCountToProbabilityMaps.length) {
+      let minesNotInConfiguration = this.remainingMines - minesInConfiguration;
+      currentCombinations *= Utils.choose(this.cellsWithoutRule.size, minesNotInConfiguration);   // TODO what to do about binomials getting huge?
+      cellValues.forEach((value, cell) => summedCellValues.set(cell, value*currentCombinations + (summedCellValues.get(cell) || 0)));
+      this.cellsWithoutRule.forEach(cell => summedCellValues.set(cell, currentCombinations*minesNotInConfiguration/this.cellsWithoutRule.size + (summedCellValues.get(cell) || 0)));
+      return totalCombinations + currentCombinations;
+    }
+    let mineCountToProbabilityMap = mineCountToProbabilityMaps[rulesetIndex];
+    let combinationsPerMineCount = combinationsPerMineCounts[rulesetIndex];
+
+    for(let [mineCount, mineProbabilityMap] of mineCountToProbabilityMap) {
+      mineProbabilityMap.forEach((value, cell) => cellValues.set(cell, value));
+      let combinations = combinationsPerMineCount.get(mineCount);
+      totalCombinations = this.generateProbabilityMap(mineCountToProbabilityMaps, combinationsPerMineCounts, cellValues, summedCellValues, rulesetIndex+1, currentCombinations*combinations, totalCombinations, minesInConfiguration + mineCount);
+    }
+    return totalCombinations;
+  }
+
+  mineProbabilitiesInConfigurationPerMineCount(configurations, cellValues, mineCountToProbabilityMap, combinationsPerMineCount) {
+    for(let [cell, value] of configurations.cellValues.entries()) {
+      cellValues.set(cell, value);
+    }
+    if(configurations.isLast()) {
+      let minesInConfiguration = 0;
+      cellValues.forEach(value => minesInConfiguration += value);
+      if(!mineCountToProbabilityMap.has(minesInConfiguration)) {
+        mineCountToProbabilityMap.set(minesInConfiguration, new Map());
+        combinationsPerMineCount.set(minesInConfiguration, 0);
+      }
+      let cellValuesSummed = mineCountToProbabilityMap.get(minesInConfiguration);
+      for(let [cell, value] of cellValues.entries()) {
+        cellValuesSummed.set(cell, value + (cellValuesSummed.get(cell) || 0));
+      }
+      combinationsPerMineCount.set(minesInConfiguration, 1 + combinationsPerMineCount.get(minesInConfiguration));
+    }
+    for(let configuration of configurations) {
+      this.mineProbabilitiesInConfigurationPerMineCount(configuration, cellValues, mineCountToProbabilityMap, combinationsPerMineCount);
+    }
   }
 
   decideAction(mineProbabilityMap) {
@@ -108,6 +173,8 @@ class Solver {
     let leastRisk = Math.min(...mineProbabilityMap.values());
     if(leastRisk > 0) {
       console.log("Now guessing with chance of failure of", leastRisk);
+      this.gameboard.chanceOfSurvial *= (1 - leastRisk);
+      console.log("Survial chance up to this point", this.gameboard.chanceOfSurvial);
       for(let [cell, value] of mineProbabilityMap) {
         if(value == leastRisk) {
           action.cellsToReveal.add(cell);
@@ -123,37 +190,6 @@ class Solver {
       }
     }
     return action;
-  }
-
-  cellValuesInConfiguration(configurations, cellValues) {
-    for(let [cell, value] of configurations.cellValues.entries()) {
-      if(!cellValues.has(cell)) {
-        cellValues.set(cell, value);
-        continue;
-      }
-      if(cellValues.get(cell) != value) {
-        cellValues.set(cell, "inconsistent");
-      }
-    }
-    for(let configuration of configurations) {
-      this.cellValuesInConfiguration(configuration, cellValues);
-    }
-  }
-
-  mineProbabilitiesInConfiguration(configurations, cellValues, cellValuesSummed, numberOfConfigurations) {
-    for(let [cell, value] of configurations.cellValues.entries()) {
-      cellValues.set(cell, value);
-    }
-    if(configurations.isLast()) {
-      for(let [cell, value] of cellValues.entries()) {
-        cellValuesSummed.set(cell, value + (cellValuesSummed.get(cell) || 0));
-      }
-      return numberOfConfigurations+1;
-    }
-    for(let configuration of configurations) {
-      numberOfConfigurations = this.mineProbabilitiesInConfiguration(configuration, cellValues, cellValuesSummed, numberOfConfigurations);
-    }
-    return numberOfConfigurations;
   }
 }
 

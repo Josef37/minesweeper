@@ -11,6 +11,8 @@ class Gameboard {
 		this.noHighlighting = false;
 		this.highlightedX = -1;
 		this.highlightedY = -1;
+		this.firstActionSave = true;
+		this.chanceOfSurvial = 1;
 		this.createCells();
 	}
 
@@ -48,6 +50,7 @@ class Gameboard {
 	reset() {
 		this.gameover = false;
 		this.won = false;
+		this.chanceOfSurvial = 1;
 		this.unrevealedCells = this.width * this.height;
 		this.createCells();
 		console.clear();
@@ -83,7 +86,7 @@ class Gameboard {
 		if(this.gameover || !this.validCoordinates(x, y) || this.board[x][y].isMarked) {
 			return false;
 		}
-		if(this.isInitialState()) {
+		if(this.isInitialState() && this.firstActionSave) {
 			this.createCellsSave(x, y);
 		}
 		let cell = this.board[x][y];
