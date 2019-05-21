@@ -1,11 +1,11 @@
 window.addEventListener('DOMContentLoaded', main);
 
 function main() {
-  let canvas: HTMLCanvasElement = (<HTMLCanvasElement>document.getElementById('gameboard')),
-    context: CanvasRenderingContext2D = canvas.getContext('2d'),
-    width: number,
-    height: number,
-    padding: number = 50;
+  let canvas: HTMLCanvasElement = (<HTMLCanvasElement>document.getElementById('gameboard'));
+  let context: CanvasRenderingContext2D = canvas.getContext('2d');
+  let width: number;
+  let height: number;
+  let padding: number = 50;
 
   // let gameboard = new Gameboard(5, 5, 5);
   // let gameboard = new Gameboard(8, 8, 10);
@@ -20,7 +20,25 @@ function main() {
   canvas.addEventListener("mousemove", event =>
     gameboard.highlight(context, ...gameboard.transpose(event.clientX - padding, event.clientY - padding)));
   window.addEventListener("resize", resizeCanvas);
-  document.addEventListener("keypress", (event) => {
+  document.addEventListener("keypress", onkeypress);
+
+  function onclick(event: MouseEvent) {
+    let canvasX = event.clientX - padding;
+    let canvasY = event.clientY - padding;
+    if (event.button == 0) { // Left mouse button
+      gameboard.doAction(...gameboard.transpose(canvasX, canvasY));
+    } else if (event.button == 2) { // Right mouse button
+      if (gameboard.gameStatus != GameStatus.Playing) {
+        gameboard.reset();
+      } else {
+        gameboard.flagCell(...gameboard.transpose(canvasX, canvasY));
+      }
+    }
+    drawGameboard();
+    event.preventDefault();
+  }
+
+  function onkeypress(event: KeyboardEvent) {
     if (gameboard.gameStatus != GameStatus.Playing) {
       return;
     }
@@ -34,22 +52,6 @@ function main() {
       drawProbabilityMap(solver.computeProbabilityMap());
     }
     console.timeEnd("solver");
-  });
-
-  function onclick(event: MouseEvent) {
-    let canvasX = event.clientX - padding,
-      canvasY = event.clientY - padding;
-    if (event.button == 0) {
-      gameboard.doAction(...gameboard.transpose(canvasX, canvasY));
-    } else if (event.button == 2) {
-      if (gameboard.gameStatus != GameStatus.Playing) {
-        gameboard.reset();
-      } else {
-        gameboard.flagCell(...gameboard.transpose(canvasX, canvasY));
-      }
-    }
-    drawGameboard();
-    event.preventDefault();
   }
 
   function drawGameboard() {
@@ -59,7 +61,7 @@ function main() {
   function drawProbabilityMap(mineProbabilityMap: Map<number, number>) {
     gameboard.mineProbabilityMap = mineProbabilityMap;
     gameboard.drawProbabilityMap = true;
-    gameboard.draw(context, width - 2 * padding, height - 2 * padding);
+    drawGameboard();
   }
 
   function resizeCanvas() {

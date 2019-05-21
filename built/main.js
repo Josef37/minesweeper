@@ -12,7 +12,25 @@ function main() {
     canvas.addEventListener("contextmenu", onclick);
     canvas.addEventListener("mousemove", event => gameboard.highlight(context, ...gameboard.transpose(event.clientX - padding, event.clientY - padding)));
     window.addEventListener("resize", resizeCanvas);
-    document.addEventListener("keypress", (event) => {
+    document.addEventListener("keypress", onkeypress);
+    function onclick(event) {
+        let canvasX = event.clientX - padding;
+        let canvasY = event.clientY - padding;
+        if (event.button == 0) { // Left mouse button
+            gameboard.doAction(...gameboard.transpose(canvasX, canvasY));
+        }
+        else if (event.button == 2) { // Right mouse button
+            if (gameboard.gameStatus != GameStatus.Playing) {
+                gameboard.reset();
+            }
+            else {
+                gameboard.flagCell(...gameboard.transpose(canvasX, canvasY));
+            }
+        }
+        drawGameboard();
+        event.preventDefault();
+    }
+    function onkeypress(event) {
         if (gameboard.gameStatus != GameStatus.Playing) {
             return;
         }
@@ -27,22 +45,6 @@ function main() {
             drawProbabilityMap(solver.computeProbabilityMap());
         }
         console.timeEnd("solver");
-    });
-    function onclick(event) {
-        let canvasX = event.clientX - padding, canvasY = event.clientY - padding;
-        if (event.button == 0) {
-            gameboard.doAction(...gameboard.transpose(canvasX, canvasY));
-        }
-        else if (event.button == 2) {
-            if (gameboard.gameStatus != GameStatus.Playing) {
-                gameboard.reset();
-            }
-            else {
-                gameboard.flagCell(...gameboard.transpose(canvasX, canvasY));
-            }
-        }
-        drawGameboard();
-        event.preventDefault();
     }
     function drawGameboard() {
         gameboard.draw(context, width - 2 * padding, height - 2 * padding);
@@ -50,7 +52,7 @@ function main() {
     function drawProbabilityMap(mineProbabilityMap) {
         gameboard.mineProbabilityMap = mineProbabilityMap;
         gameboard.drawProbabilityMap = true;
-        gameboard.draw(context, width - 2 * padding, height - 2 * padding);
+        drawGameboard();
     }
     function resizeCanvas() {
         width = canvas.width = window.innerWidth;
