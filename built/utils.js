@@ -17,7 +17,6 @@ class Utils {
         let x = index % gridWidth, y = Math.floor(index / gridWidth);
         return [x, y];
     }
-    // TODO replace https://stackoverflow.com/questions/37679987/efficient-computation-of-n-choose-k-in-node-js
     // binomial coefficient "n choose k"
     static choose(n, k) {
         if (k < 0)
@@ -25,6 +24,16 @@ class Utils {
         if (k === 0)
             return 1;
         return n / k * Utils.choose(n - 1, k - 1);
+    }
+    // calculate choose(n,k) / choose(n, minimalK)
+    static reducedBinomial(n, k, minimalK) {
+        if (k < 0)
+            return 0;
+        let result = 1;
+        for (let i = 0; i < k - minimalK; i++) {
+            result *= (n - minimalK - i) / (k - i);
+        }
+        return result;
     }
 }
 // map from keys to multiple values

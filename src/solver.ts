@@ -125,7 +125,13 @@ class Solver {
       numberOfMinesToProbabilityMapByRulesets.push(numberOfMinesToProbabilityMaps);
       combinationsPerNumberOfMinesByRulesets.push(combinationsPerNumberOfMines);
     }
-    let totalCombinations = this.generateProbabilityMap(numberOfMinesToProbabilityMapByRulesets, combinationsPerNumberOfMinesByRulesets, new Map(), mineProbabilityMap);
+    // compute lower bound k for reducing binomial coefficient
+    let minimalMinesNotInConfiguration: number = this.gameboard.totalNumberOfMines;
+    if (combinationsPerNumberOfMinesByRulesets.length > 0) {
+      minimalMinesNotInConfiguration = Math.max(0,
+        this.numberOfRemainingMines - combinationsPerNumberOfMinesByRulesets.map(combinations => Math.max(...combinations.keys())).reduce((acc, val) => acc + val));
+    }
+    let totalCombinations = this.generateProbabilityMap(numberOfMinesToProbabilityMapByRulesets, combinationsPerNumberOfMinesByRulesets, new Map(), mineProbabilityMap, minimalMinesNotInConfiguration);
     mineProbabilityMap.forEach((value, cell) => mineProbabilityMap.set(cell, value / totalCombinations));
     return mineProbabilityMap;
   }
@@ -136,10 +142,11 @@ class Solver {
     combinationsPerNumberOfMinesByRulesets: Map<number, number>[],
     currentCellValues: Map<number, number>,
     summedCellValues: Map<number, number>,
+    minimalMinesNotInConfiguration: number,
     rulesetIndex = 0, currentCombinations = 1, totalCombinations = 0, minesInConfiguration = 0) {
     if (rulesetIndex == numberOfMinesToProbabilityMapByRulesets.length) {   // complete configuration generated
       let minesNotInConfiguration = this.numberOfRemainingMines - minesInConfiguration;
-      currentCombinations *= Utils.choose(this.unclearCellsWithoutRule.size, minesNotInConfiguration);  // distribute remaining mines equally to "unruled" cells // TODO what to do about binomials getting huge?
+      currentCombinations *= Utils.reducedBinomial(this.unclearCellsWithoutRule.size, minesNotInConfiguration, minimalMinesNotInConfiguration);  // distribute remaining mines equally to "unruled" cells
       currentCellValues.forEach((value, cell) => summedCellValues.set(cell, value * currentCombinations + (summedCellValues.get(cell) || 0)));  // weight by number of configurations
       this.unclearCellsWithoutRule.forEach(cell => summedCellValues.set(cell, minesNotInConfiguration / this.unclearCellsWithoutRule.size * currentCombinations + (summedCellValues.get(cell) || 0)));
       return totalCombinations + currentCombinations;
@@ -147,7 +154,7 @@ class Solver {
     for (let [mineCount, mineProbabilityMap] of numberOfMinesToProbabilityMapByRulesets[rulesetIndex]) {
       mineProbabilityMap.forEach((value, cell) => currentCellValues.set(cell, value));
       let combinations = combinationsPerNumberOfMinesByRulesets[rulesetIndex].get(mineCount);
-      totalCombinations = this.generateProbabilityMap(numberOfMinesToProbabilityMapByRulesets, combinationsPerNumberOfMinesByRulesets, currentCellValues, summedCellValues, rulesetIndex + 1, currentCombinations * combinations, totalCombinations, minesInConfiguration + mineCount);
+      totalCombinations = this.generateProbabilityMap(numberOfMinesToProbabilityMapByRulesets, combinationsPerNumberOfMinesByRulesets, currentCellValues, summedCellValues, minimalMinesNotInConfiguration, rulesetIndex + 1, currentCombinations * combinations, totalCombinations, minesInConfiguration + mineCount);
     }
     return totalCombinations;
   }

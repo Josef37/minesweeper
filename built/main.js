@@ -9,7 +9,7 @@ function main() {
     // let gameboard = new Gameboard(8, 8, 10);
     // let gameboard = new Gameboard(16, 16, 40);
     let gameboard = new Gameboard(30, 16, 99);
-    // let gameboard = new Gameboard(100, 100, 1);
+    // let gameboard = new Gameboard(100, 100, 100*100*0.2);
     let solver;
     resizeCanvas();
     canvas.addEventListener("click", onclick);
