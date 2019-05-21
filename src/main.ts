@@ -49,7 +49,7 @@ function main() {
       drawGameboard();
     } else if (event.key == "p") {
       solver = new Solver(gameboard);
-      drawProbabilityMap(solver.computeProbabilityMap());
+      drawProbabilityMap(solver.mineProbabilityMap);
     }
     console.timeEnd("solver");
   }

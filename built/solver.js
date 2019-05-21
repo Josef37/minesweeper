@@ -8,6 +8,7 @@ class Solver {
         this.unclearCellsWithoutRule = new Set();
         this.numberOfRemainingMines = gameboard.countRemainingMines();
         this.generateRulesetsFromGameboard();
+        this.mineProbabilityMap = this.computeProbabilityMap();
     }
     // collect rules into distinct sets, so these sets do not share any cell
     // if rules are connected through their cells, a ruleset is a connected component in that graph
@@ -91,7 +92,7 @@ class Solver {
         if (this.gameboard.isInitialState()) {
             return;
         }
-        this.nextAction = this.decideAction(this.computeProbabilityMap()); // TODO only calculate once
+        this.nextAction = this.decideAction(this.mineProbabilityMap); // TODO only calculate once
     }
     // reveal and flag cells given by next action
     doAction() {
@@ -112,39 +113,13 @@ class Solver {
         for (let ruleset of this.rulesets) {
             // ruleset.computeConfigurations() doesn't return "invalid", because there is always at least one valid configuration
             let configurations = new Configuration(ruleset.computeConfigurations(), new Map());
-            let [numberOfMinesToProbabilityMaps, combinationsPerNumberOfMines] = this.mineProbabilitiesInConfigurationsPerNumberOfMines(configurations);
+            let [numberOfMinesToProbabilityMaps, combinationsPerNumberOfMines] = configurations.mineProbabilitiesPerNumberOfMines();
             numberOfMinesToProbabilityMapByRulesets.push(numberOfMinesToProbabilityMaps);
             combinationsPerNumberOfMinesByRulesets.push(combinationsPerNumberOfMines);
         }
         let totalCombinations = this.generateProbabilityMap(numberOfMinesToProbabilityMapByRulesets, combinationsPerNumberOfMinesByRulesets, new Map(), mineProbabilityMap);
         mineProbabilityMap.forEach((value, cell) => mineProbabilityMap.set(cell, value / totalCombinations));
         return mineProbabilityMap;
-    }
-    // for all configurations return map from number of mines in configuration to mine probability and number of configurations
-    mineProbabilitiesInConfigurationsPerNumberOfMines(configurations) {
-        let numberOfMinesToSummedValues = new Map();
-        let combinationsPerNumberOfMines = new Map();
-        // map from mines in configuration to summed values and accumulate number of combinations
-        configurations.actOnAllConfigurations((cellValues) => {
-            let minesInConfiguration = 0;
-            cellValues.forEach(value => minesInConfiguration += value);
-            if (!numberOfMinesToSummedValues.has(minesInConfiguration)) {
-                numberOfMinesToSummedValues.set(minesInConfiguration, new Map());
-                combinationsPerNumberOfMines.set(minesInConfiguration, 0);
-            }
-            let cellValuesSummed = numberOfMinesToSummedValues.get(minesInConfiguration);
-            for (let [cell, value] of cellValues.entries()) {
-                cellValuesSummed.set(cell, value + (cellValuesSummed.get(cell) || 0));
-            }
-            combinationsPerNumberOfMines.set(minesInConfiguration, 1 + combinationsPerNumberOfMines.get(minesInConfiguration));
-        });
-        // divide by number of combinations to get probability
-        let numberOfMinesToProbabilityMaps = numberOfMinesToSummedValues;
-        for (let [numberOfMines, summedNumberOfMinesMap] of numberOfMinesToProbabilityMaps) {
-            let combinations = combinationsPerNumberOfMines.get(numberOfMines);
-            summedNumberOfMinesMap.forEach((value, cell) => summedNumberOfMinesMap.set(cell, value / combinations));
-        }
-        return [numberOfMinesToProbabilityMaps, combinationsPerNumberOfMines];
     }
     // piece together all probability maps and weight by number of possible configurations
     // return the total number of valid configurations
