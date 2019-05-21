@@ -18,8 +18,8 @@ class Rule {
         if (i == -1) {
             return this;
         }
-        let newCells = this.cells.slice();
-        newCells.splice(i, 1);
-        return new Rule(this.numberOfMines - value, newCells);
+        let updatedCells = this.cells.slice();
+        updatedCells.splice(i, 1);
+        return new Rule(this.numberOfMines - value, updatedCells);
     }
 }
