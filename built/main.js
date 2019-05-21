@@ -1,6 +1,10 @@
 window.addEventListener('DOMContentLoaded', main);
 function main() {
-    let canvas = document.getElementById('gameboard'), context = canvas.getContext('2d'), width, height, padding = 50;
+    let canvas = document.getElementById('gameboard');
+    let context = canvas.getContext('2d');
+    let width;
+    let height;
+    let padding = 50;
     // let gameboard = new Gameboard(5, 5, 5);
     // let gameboard = new Gameboard(8, 8, 10);
     // let gameboard = new Gameboard(16, 16, 40);
