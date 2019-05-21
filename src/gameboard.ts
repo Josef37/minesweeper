@@ -104,7 +104,7 @@ class Gameboard {
     }
 
     let cell = this.board[x][y];
-    let newRevealedCells = [];
+    let newRevealedCells: Set<Cell> = new Set();
     let mineRevealed: boolean;
     if (cell.isRevealed) {
       mineRevealed = this.autoRevealCells(x, y, newRevealedCells);
@@ -112,18 +112,18 @@ class Gameboard {
       mineRevealed = this.revealCell(x, y, newRevealedCells);
     }
 
-    this.numberOfUnrevealedCells -= newRevealedCells.length;
+    this.numberOfUnrevealedCells -= newRevealedCells.size;
     if (mineRevealed) {
       this.gameStatus = GameStatus.Lost;
     } else if (this.numberOfUnrevealedCells == this.totalNumberOfMines) {
       this.gameStatus = GameStatus.Won;
     }
-    return newRevealedCells.length > 0;
+    return newRevealedCells.size > 0;
   }
 
   // initiate mine revealing for all neighbours, when flagged cells match number of mines; save revealed cells
   // returns true, if mine was revealed
-  autoRevealCells(x: number, y: number, revealedCells: Cell[]): boolean {
+  autoRevealCells(x: number, y: number, revealedCells: Set<Cell>): boolean {
     let cell = this.board[x][y];
     let numberOfFlaggedCells = 0;
     this.doForAllNeighbours(x, y, neighbour => numberOfFlaggedCells += Number(neighbour.isFlagged));
@@ -139,25 +139,27 @@ class Gameboard {
     return mineRevealed;
   }
 
-  // reveal cells and propagate revealing, if there are no mines adjacent;  save all revealed cells
+  // reveal cells and propagate revealing, if there are no mines adjacent; save all revealed cells
   // returns true, if mine was revealed
-  // TODO make callstack not exceed maximum trough BFS
-  revealCell(x: number, y: number, revealedCells: Cell[]): boolean {
-    let cell = this.board[x][y];
-    if (revealedCells.includes(cell) || cell.isRevealed) {
-      return false;
+  revealCell(x: number, y: number, revealedCells: Set<Cell> = new Set()): boolean {
+    let toVisit: [number, number][] = [[x, y]];
+
+    while (toVisit.length > 0) {
+      let [x, y] = toVisit.shift();
+      let cell = this.board[x][y];
+      if (cell.isRevealed || revealedCells.has(cell)) {
+        continue;
+      }
+      cell.reveal();
+      revealedCells.add(cell);
+      if (cell.hasMine) {
+        return true;
+      }
+      if (cell.numberOfAdjacentMines == 0) {
+        this.doForAllNeighbours(x, y, (_neighbour, neighbourX, neighbourY) => toVisit.push([neighbourX, neighbourY]));
+      }
     }
-    cell.reveal();
-    revealedCells.push(cell);
-    if (cell.hasMine) {
-      return true;
-    }
-    let mineOpened = false;
-    if (cell.numberOfAdjacentMines == 0) {
-      this.doForAllNeighbours(x, y, (_neighbour, neighbourX, neighbourY) =>
-        mineOpened = mineOpened || this.revealCell(neighbourX, neighbourY, revealedCells));
-    }
-    return mineOpened;
+    return false;
   }
 
   flagCell(x: number, y: number) {

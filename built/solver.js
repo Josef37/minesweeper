@@ -92,7 +92,7 @@ class Solver {
         if (this.gameboard.isInitialState()) {
             return;
         }
-        this.nextAction = this.decideAction(this.mineProbabilityMap); // TODO only calculate once
+        this.nextAction = this.decideAction(this.mineProbabilityMap);
     }
     // reveal and flag cells given by next action
     doAction() {
