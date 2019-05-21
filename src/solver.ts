@@ -55,9 +55,9 @@ class Solver {
         if (!cell.isRevealed) {
           continue;
         }
-        let mineCount = cell.adjacentMinesCount,
+        let mineCount = cell.numberOfAdjacentMines,
           cells = [];
-        this.gameboard.iterateNeighbours(x, y, (neighbour, neighbourX, neighbourY) => {
+        this.gameboard.doForAllNeighbours(x, y, (neighbour, neighbourX, neighbourY) => {
           if (!neighbour.isRevealed) {
             if (neighbour.isFlagged) {
               mineCount--;

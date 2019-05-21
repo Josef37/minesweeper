@@ -2,35 +2,25 @@
 class Cell {
   isRevealed: boolean = false;
   isFlagged: boolean = false;
-  adjacentMinesCount: number;
+  numberOfAdjacentMines: number;
   isHighlighted: boolean = false;
 
 	constructor(public hasMine: boolean) {}
 
-	setMineCount(mineCount: number) {
-		this.adjacentMinesCount = mineCount;
+	setNumberOfAdjacentMines(numberOfAdjacentMines: number) {
+		this.numberOfAdjacentMines = numberOfAdjacentMines;
 	}
 
-	// return true, if something changes
 	reveal() {
-		if (this.isRevealed) {
-			return false;
-		}
 		this.isRevealed = true;
-		return true;
 	}
 
-	// return true, if something changes
 	toggleFlag() {
-		if (this.isRevealed) {
-			return false;
-		}
 		this.isFlagged = !this.isFlagged;
-		return true;
 	}
 
   // draw square with border and mine, count or flag
-	draw(context: CanvasRenderingContext2D, x: number, y: number, size: number, gameover = false) {
+	draw(context: CanvasRenderingContext2D, x: number, y: number, size: number, isGameover = false) {
     // draw square with border
 		if (this.isRevealed) {
 			context.fillStyle = "#fff";
@@ -41,22 +31,22 @@ class Cell {
 		}
 		context.fillRect(x, y, size, size);
 		context.strokeStyle = "black";
-		context.lineWidth = size / 20;
-		context.strokeRect(x, y, size, size);
+		context.lineWidth = size / 30;
+		context.strokeRect(x + context.lineWidth / 2, y + context.lineWidth / 2, size - context.lineWidth, size - context.lineWidth);
 
     // draw mine or count for revealed cell
-		if (this.isRevealed || gameover) {
+		if (this.isRevealed || isGameover) {
 			if (this.hasMine) {
 				context.fillStyle = "black";
 				context.beginPath();
 				context.arc(x + size / 2, y + size / 2, size / 5, 0, 2 * Math.PI);
 				context.fill();
-			} else if (this.adjacentMinesCount > 0) {
+			} else if (this.numberOfAdjacentMines > 0) {
 				context.fillStyle = "black";
 				context.textAlign = "center";
 				context.textBaseline = "middle";
 				context.font = `${size * 0.6}px sans-serif`;
-				context.fillText(this.adjacentMinesCount.toString(), x + size * 0.5, y + size * 0.55, size);
+				context.fillText(this.numberOfAdjacentMines.toString(), x + size * 0.5, y + size * 0.55, size);
 			}
 		}
     // draw flag for flagged cell

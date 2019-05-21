@@ -4,14 +4,16 @@ function main() {
     // let gameboard = new Gameboard(5, 5, 5);
     // let gameboard = new Gameboard(8, 8, 10);
     // let gameboard = new Gameboard(16, 16, 40);
-    let gameboard = new Gameboard(30, 16, 99), solver;
+    let gameboard = new Gameboard(30, 16, 99);
+    // let gameboard = new Gameboard(100, 100, 1);
+    let solver;
     resizeCanvas();
     canvas.addEventListener("click", onclick);
     canvas.addEventListener("contextmenu", onclick);
-    canvas.addEventListener("mousemove", event => gameboard.highlight(context, event.clientX - padding, event.clientY - padding));
+    canvas.addEventListener("mousemove", event => gameboard.highlight(context, ...gameboard.transpose(event.clientX - padding, event.clientY - padding)));
     window.addEventListener("resize", resizeCanvas);
     document.addEventListener("keypress", (event) => {
-        if (gameboard.gameover) {
+        if (gameboard.gameStatus != GameStatus.Playing) {
             return;
         }
         console.time("solver");
@@ -27,16 +29,16 @@ function main() {
         console.timeEnd("solver");
     });
     function onclick(event) {
-        let x = event.clientX - padding, y = event.clientY - padding;
+        let canvasX = event.clientX - padding, canvasY = event.clientY - padding;
         if (event.button == 0) {
-            gameboard.doAction(...gameboard.getCoordinates(x, y));
+            gameboard.doAction(...gameboard.transpose(canvasX, canvasY));
         }
         else if (event.button == 2) {
-            if (gameboard.gameover) {
+            if (gameboard.gameStatus != GameStatus.Playing) {
                 gameboard.reset();
             }
             else {
-                gameboard.flagCell(...gameboard.getCoordinates(x, y));
+                gameboard.flagCell(...gameboard.transpose(canvasX, canvasY));
             }
         }
         drawGameboard();
