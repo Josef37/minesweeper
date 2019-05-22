@@ -48,7 +48,23 @@ function main() {
             solver = new Solver(gameboard);
             drawProbabilityMap(solver.mineProbabilityMap);
         }
+        else if (event.key == "t") {
+            testSolver(100);
+        }
         console.timeEnd("solver");
+    }
+    function testSolver(iterations) {
+        let winCount = 0;
+        for (let i = 1; i <= iterations; i++) {
+            gameboard.reset();
+            while (gameboard.gameStatus == GameStatus.Playing) {
+                solver = new Solver(gameboard);
+                solver.solve();
+            }
+            winCount += Number(gameboard.gameStatus == GameStatus.Won);
+            console.log(`${winCount} of ${i} won (${100 * winCount / i}%)`);
+        }
+        gameboard.reset();
     }
     function drawGameboard() {
         gameboard.draw(context, width - 2 * padding, height - 2 * padding);

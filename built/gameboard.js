@@ -21,7 +21,6 @@ class Gameboard {
         this.chanceOfSurvial = 1;
         this.numberOfUnrevealedCells = this.width * this.height;
         this.createBoard();
-        console.clear();
     }
     // create cells with "totalNumberOfMines"
     createBoard() {
