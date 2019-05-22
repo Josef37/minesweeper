@@ -5,12 +5,15 @@ class Solver {
   unclearCellsWithoutRule: Set<number> = new Set();
   numberOfRemainingMines: number;
   mineProbabilityMap: Map<number, number>;
+  cellsByPriority: number[];
 
   constructor(public gameboard: Gameboard,
     public nextAction = { cellsToReveal: new Set([0]), cellsToFlag: new Set() }) {
     this.numberOfRemainingMines = gameboard.countRemainingMines();
     this.generateRulesetsFromGameboard();
     this.mineProbabilityMap = this.computeProbabilityMap();
+    this.cellsByPriority =  // corner cells
+      [0, gameboard.width - 1, gameboard.width * (gameboard.height - 1), gameboard.width * gameboard.height - 1];
   }
 
   // collect rules into distinct sets, so these sets do not share any cell
@@ -164,15 +167,23 @@ class Solver {
   decideAction(mineProbabilityMap: Map<number, number>) {
     let action = { cellsToReveal: new Set(), cellsToFlag: new Set() };
     let leastRisk = Math.min(...mineProbabilityMap.values());
-    if (leastRisk > 0) { // open only one cell with least mine probability
+    if (Math.abs(leastRisk) > Number.EPSILON) { // open only one cell with least mine probability
       console.log("Now guessing with chance of failure of", leastRisk);
       console.log("Survial chance up to this point", this.gameboard.chanceOfSurvial *= (1 - leastRisk));
+      let leastRiskCells = new Set();
       for (let [cell, value] of mineProbabilityMap) {
         if (Math.abs(value - leastRisk) < Number.EPSILON) {
+          leastRiskCells.add(cell);
+        }
+      }
+      for (let cell of this.cellsByPriority) {   // select priority cells
+        if (leastRiskCells.has(cell)) {
           action.cellsToReveal.add(cell);
           return action;
         }
       }
+      action.cellsToReveal.add(leastRiskCells.values().next().value);   // select anything else
+      return action;
     }
     for (let [cell, value] of mineProbabilityMap) {
       if (Math.abs(value - 0) < Number.EPSILON) {
