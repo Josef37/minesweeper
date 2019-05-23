@@ -1,7 +1,7 @@
 // handy utilities
 class Utils {
-  // modern Fisher–Yates shuffle
-  static shuffle(array: any[]) {
+  // modern Fisher–Yates shuffle (in-place)
+  static shuffle(array: any[]): any[] {
     for (let i = array.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [array[i], array[j]] = [array[j], array[i]];
@@ -10,7 +10,7 @@ class Utils {
   }
 
   // convert coordinates to x-first index (x-first = x is counted up first)
-  static getIndex(x: number, y: number, gridWidth: number) {
+  static getIndex(x: number, y: number, gridWidth: number): number {
     return x + y * gridWidth;
   }
 
@@ -22,14 +22,14 @@ class Utils {
   }
 
   // binomial coefficient "n choose k"
-  static choose(n: number, k: number) {
+  static choose(n: number, k: number): number {
     if (k < 0) return 0;
     if (k === 0) return 1;
     return n / k * Utils.choose(n - 1, k - 1);
   }
 
   // calculate choose(n,k) / choose(n, minimalK)
-  static reducedBinomial(n: number, k: number, minimalK: number) {
+  static reducedBinomial(n: number, k: number, minimalK: number): number {
     if (k < 0) return 0;
     let result = 1;
     for (let i = 0; i < k - minimalK; i++) {

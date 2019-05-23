@@ -2,7 +2,7 @@
 class Cell {
   isRevealed: boolean = false;
   isFlagged: boolean = false;
-  numberOfAdjacentMines: number;
+  numberOfAdjacentMines: number = -1;
   isHighlighted: boolean = false;
 
 	constructor(public hasMine: boolean) {}

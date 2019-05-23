@@ -1,6 +1,6 @@
 // handy utilities
 class Utils {
-    // modern Fisher–Yates shuffle
+    // modern Fisher–Yates shuffle (in-place)
     static shuffle(array) {
         for (let i = array.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));

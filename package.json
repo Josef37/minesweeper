@@ -1,0 +1,31 @@
+{
+  "name": "minesweeper",
+  "version": "1.0.0",
+  "description": "This project is a simple minesweeper game with an automatic solver.",
+  "main": "index.html",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Josef37/minesweeper.git"
+  },
+  "keywords": [
+    "minesweeper",
+    "solver",
+    "ai"
+  ],
+  "author": "Josef Wittmann",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Josef37/minesweeper/issues"
+  },
+  "homepage": "https://github.com/Josef37/minesweeper#readme",
+  "devDependencies": {
+    "@types/jest": "^24.0.13",
+    "@types/node": "^12.0.2",
+    "jest": "^24.8.0",
+    "ts-jest": "^24.0.2",
+    "typescript": "^3.4.5"
+  }
+}

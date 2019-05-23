@@ -4,6 +4,7 @@ class Cell {
         this.hasMine = hasMine;
         this.isRevealed = false;
         this.isFlagged = false;
+        this.numberOfAdjacentMines = -1;
         this.isHighlighted = false;
     }
     setNumberOfAdjacentMines(numberOfAdjacentMines) {
