@@ -281,7 +281,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 class Configuration {
     constructor(subConfigurations, 
     // cell values in this part of a complete configuration
-    // cells may only occur once in a path in the configuration tree
+    // cells have to occur exactly once in a path in the configuration tree:
+    // - if there is a duplicate, the later will overwrite the first value
+    // - if a cell occurs in one path, but not the other, the second result will have that cell anyway
     cellValues) {
         this.subConfigurations = subConfigurations;
         this.cellValues = cellValues;
