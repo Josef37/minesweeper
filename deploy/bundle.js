@@ -948,7 +948,6 @@ class Solver {
     generateProbabilityMap(numberOfMinesToProbabilityMapByRulesets, combinationsPerNumberOfMinesByRulesets, currentCellValues, summedCellValues, minimalMinesNotInConfiguration, rulesetIndex = 0, currentCombinations = 1, totalCombinations = 0, minesInConfiguration = 0) {
         if (rulesetIndex == numberOfMinesToProbabilityMapByRulesets.length) { // complete configuration generated
             let minesNotInConfiguration = this.numberOfRemainingMines - minesInConfiguration;
-            console.log(utils_1.Utils.reducedBinomial(this.unclearCellsWithoutRule.size, minesNotInConfiguration, minimalMinesNotInConfiguration));
             currentCombinations *= utils_1.Utils.reducedBinomial(this.unclearCellsWithoutRule.size, minesNotInConfiguration, minimalMinesNotInConfiguration); // distribute remaining mines equally to "unruled" cells
             currentCellValues.forEach((value, cell) => summedCellValues.set(cell, value * currentCombinations + (summedCellValues.get(cell) || 0))); // weight by number of configurations
             this.unclearCellsWithoutRule.forEach(cell => summedCellValues.set(cell, minesNotInConfiguration / this.unclearCellsWithoutRule.size * currentCombinations + (summedCellValues.get(cell) || 0)));

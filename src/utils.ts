@@ -26,14 +26,14 @@ export class Utils {
 
   // binomial coefficient "n choose k"
   static choose(n: number, k: number): number {
-    if (k < 0) return 0;
+    if (k < 0 || n < 0) return 0;
     if (k === 0) return 1;
     return n / k * Utils.choose(n - 1, k - 1);
   }
 
   // calculate choose(n,k) / choose(n, minimalK)
   static reducedBinomial(n: number, k: number, minimalK: number): number {
-    if (k < 0) return 0;
+    if (k < 0 || n < 0) return 0;
     let result = 1;
     for (let i = 0; i < k - minimalK; i++) {
       result *= (n - minimalK - i) / (k - i);
