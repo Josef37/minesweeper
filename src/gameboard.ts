@@ -1,11 +1,14 @@
-enum GameStatus {
+import { Utils } from "./utils";
+import { Cell } from "./cell";
+
+export enum GameStatus {
   Playing,
   Won = "You've won!",
   Lost = "You've lost..."
 }
 
 
-class Gameboard {
+export class Gameboard {
   board: Cell[][];
   numberOfUnrevealedCells: number;
   gameStatus: GameStatus;

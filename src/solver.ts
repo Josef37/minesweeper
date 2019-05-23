@@ -1,6 +1,12 @@
+import { Gameboard } from "./gameboard";
+import { Utils } from "./utils";
+import { Ruleset } from "./ruleset";
+import { Rule } from "./rule";
+import { Configuration } from "./configuration";
+
 // solving one specific gameboard by calculating mine probabilities for every cell
 // in the solving domain, cells are always identified by index, not coordinates
-class Solver {
+export class Solver {
   rulesets: Ruleset[] = [];
   unclearCellsWithoutRule: Set<number> = new Set();
   numberOfRemainingMines: number;

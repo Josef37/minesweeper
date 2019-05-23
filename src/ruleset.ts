@@ -1,6 +1,9 @@
+import { Configuration } from "./configuration";
+import { Rule } from "./rule";
+
 // representation of a set of connected rules
 // TODO Optimize by only looking at affected cells and rules
-class Ruleset {
+export class Ruleset {
   constructor(public rules: Set<Rule>) { }
 
   // computes all possible configuration satisfying this set of rules

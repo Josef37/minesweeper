@@ -1,9 +1,12 @@
+import MersenneTwister = require('mersenne-twister');
+
 // handy utilities
-class Utils {
+export class Utils {
   // modern Fisher–Yates shuffle (in-place)
-  static shuffle(array: any[]): any[] {
+  static shuffle(array: any[], seed?: number): any[] {
+    let generator = seed == undefined ? new MersenneTwister() : new MersenneTwister(seed);
     for (let i = array.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
+      const j = Math.floor(generator.random() * (i + 1));
       [array[i], array[j]] = [array[j], array[i]];
     }
     return array;
@@ -40,7 +43,7 @@ class Utils {
 }
 
 // map from keys to multiple values
-class Multimap {
+export class Multimap {
   map: Map<any, Set<any>>;
 
   constructor() {

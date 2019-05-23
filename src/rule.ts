@@ -1,5 +1,5 @@
 // respresentation of a single rule specifying the number of mines contained in the given cells
-class Rule {
+export class Rule {
   constructor(public numberOfMines: number,
     public cells: number[]) {}
 

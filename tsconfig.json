@@ -4,7 +4,7 @@
     "module": "commonjs",
     "lib": [ "es5", "es6", "es7", "dom", "esnext" ],
     "downlevelIteration": true,
-    "outDir": "built",
+    "outDir": "built"
   },
   "include": ["./src/**/*"],
   "exclude": ["node_modules", "**/*.spec.ts"]

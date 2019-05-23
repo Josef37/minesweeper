@@ -1,5 +1,5 @@
 // representation of a single cell in the minesweeper grid
-class Cell {
+export class Cell {
   isRevealed: boolean = false;
   isFlagged: boolean = false;
   numberOfAdjacentMines: number = -1;

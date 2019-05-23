@@ -1,3 +1,6 @@
+import { Gameboard, GameStatus } from "./gameboard";
+import { Solver } from "./solver";
+
 window.addEventListener('DOMContentLoaded', main);
 
 function main() {

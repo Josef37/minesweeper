@@ -1,7 +1,7 @@
 // representation of a valid mine configuration/distribution
 // each instance stores a coherent part of a complete configuration and links to its successors
 // by traversing the resulting tree structure, all distributions can be obtainend
-class Configuration {
+export class Configuration {
   constructor(public subConfigurations: Configuration[],
     // cell values in this part of a complete configuration
     // cells may only occur once in a path in the configuration tree
