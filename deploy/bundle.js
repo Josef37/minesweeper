@@ -279,7 +279,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 // each instance stores a coherent part of a complete configuration and links to its successors
 // by traversing the resulting tree structure, all distributions can be obtainend
 class Configuration {
-    constructor(subConfigurations,
+    constructor(subConfigurations, 
     // cell values in this part of a complete configuration
     // cells may only occur once in a path in the configuration tree
     cellValues) {
@@ -930,10 +930,14 @@ class Solver {
             numberOfMinesToProbabilityMapByRulesets.push(numberOfMinesToProbabilityMaps);
             combinationsPerNumberOfMinesByRulesets.push(combinationsPerNumberOfMines);
         }
-        // compute lower bound k for reducing binomial coefficient
+        // compute lower bound k for reducing binomial coefficient (minimum number of "unruled" cells with mine or without mine)
         let minimalMinesNotInConfiguration = this.gameboard.totalNumberOfMines;
         if (combinationsPerNumberOfMinesByRulesets.length > 0) {
-            minimalMinesNotInConfiguration = Math.max(0, this.numberOfRemainingMines - combinationsPerNumberOfMinesByRulesets.map(combinations => Math.max(...combinations.keys())).reduce((acc, val) => acc + val));
+            minimalMinesNotInConfiguration = Math.max(0, Math.min(
+            // minimum with mine
+            this.numberOfRemainingMines - combinationsPerNumberOfMinesByRulesets.map(combinations => Math.max(...combinations.keys())).reduce((acc, val) => acc + val), 
+            // minimum without mine
+            this.unclearCellsWithoutRule.size - (this.numberOfRemainingMines - combinationsPerNumberOfMinesByRulesets.map(combinations => Math.min(...combinations.keys())).reduce((acc, val) => acc + val))));
         }
         let totalCombinations = this.generateProbabilityMap(numberOfMinesToProbabilityMapByRulesets, combinationsPerNumberOfMinesByRulesets, new Map(), mineProbabilityMap, minimalMinesNotInConfiguration);
         mineProbabilityMap.forEach((value, cell) => mineProbabilityMap.set(cell, value / totalCombinations));
@@ -944,6 +948,7 @@ class Solver {
     generateProbabilityMap(numberOfMinesToProbabilityMapByRulesets, combinationsPerNumberOfMinesByRulesets, currentCellValues, summedCellValues, minimalMinesNotInConfiguration, rulesetIndex = 0, currentCombinations = 1, totalCombinations = 0, minesInConfiguration = 0) {
         if (rulesetIndex == numberOfMinesToProbabilityMapByRulesets.length) { // complete configuration generated
             let minesNotInConfiguration = this.numberOfRemainingMines - minesInConfiguration;
+            console.log(utils_1.Utils.reducedBinomial(this.unclearCellsWithoutRule.size, minesNotInConfiguration, minimalMinesNotInConfiguration));
             currentCombinations *= utils_1.Utils.reducedBinomial(this.unclearCellsWithoutRule.size, minesNotInConfiguration, minimalMinesNotInConfiguration); // distribute remaining mines equally to "unruled" cells
             currentCellValues.forEach((value, cell) => summedCellValues.set(cell, value * currentCombinations + (summedCellValues.get(cell) || 0))); // weight by number of configurations
             this.unclearCellsWithoutRule.forEach(cell => summedCellValues.set(cell, minesNotInConfiguration / this.unclearCellsWithoutRule.size * currentCombinations + (summedCellValues.get(cell) || 0)));
@@ -1018,7 +1023,7 @@ class Utils {
     }
     // binomial coefficient "n choose k"
     static choose(n, k) {
-        if (k < 0)
+        if (k < 0 || n < 0)
             return 0;
         if (k === 0)
             return 1;
@@ -1026,7 +1031,7 @@ class Utils {
     }
     // calculate choose(n,k) / choose(n, minimalK)
     static reducedBinomial(n, k, minimalK) {
-        if (k < 0)
+        if (k < 0 || n < 0)
             return 0;
         let result = 1;
         for (let i = 0; i < k - minimalK; i++) {

@@ -134,11 +134,17 @@ export class Solver {
       numberOfMinesToProbabilityMapByRulesets.push(numberOfMinesToProbabilityMaps);
       combinationsPerNumberOfMinesByRulesets.push(combinationsPerNumberOfMines);
     }
-    // compute lower bound k for reducing binomial coefficient
+    // compute lower bound k for reducing binomial coefficient (minimum number of "unruled" cells with mine or without mine)
     let minimalMinesNotInConfiguration: number = this.gameboard.totalNumberOfMines;
     if (combinationsPerNumberOfMinesByRulesets.length > 0) {
       minimalMinesNotInConfiguration = Math.max(0,
-        this.numberOfRemainingMines - combinationsPerNumberOfMinesByRulesets.map(combinations => Math.max(...combinations.keys())).reduce((acc, val) => acc + val));
+        Math.min(
+          // minimum with mine
+          this.numberOfRemainingMines - combinationsPerNumberOfMinesByRulesets.map(combinations => Math.max(...combinations.keys())).reduce((acc, val) => acc + val),
+          // minimum without mine
+          this.unclearCellsWithoutRule.size - (this.numberOfRemainingMines - combinationsPerNumberOfMinesByRulesets.map(combinations => Math.min(...combinations.keys())).reduce((acc, val) => acc + val))
+        )
+      );
     }
     let totalCombinations = this.generateProbabilityMap(numberOfMinesToProbabilityMapByRulesets, combinationsPerNumberOfMinesByRulesets, new Map(), mineProbabilityMap, minimalMinesNotInConfiguration);
     mineProbabilityMap.forEach((value, cell) => mineProbabilityMap.set(cell, value / totalCombinations));
