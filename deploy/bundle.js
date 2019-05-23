@@ -739,11 +739,11 @@ class Ruleset {
             [cell, value] = cellValuesToApply.entries().next().value;
             cellValuesToApply.delete(cell);
             fixedCellValues.set(cell, value);
-            newRuleset = this.applyRules(cell, value, newRuleset.rules);
+            newRuleset = newRuleset.updateRules(cell, value);
             if (newRuleset == "invalid") {
                 return ["invalid"];
             }
-            let newFixedCellValues = newRuleset.getFixedCellValues();
+            let newFixedCellValues = newRuleset.getCellValuesFromSolvedRules();
             if (newFixedCellValues == "invalid") {
                 return ["invalid"];
             }
@@ -758,9 +758,9 @@ class Ruleset {
     }
     // return the resulting set of rules after fixing cell to value
     // return "invalid", if there is a contradiction to a rule
-    applyRules(cell, value, rules) {
+    updateRules(cell, value) {
         let newRules = new Set();
-        for (let rule of rules) {
+        for (let rule of this.rules) {
             rule = rule.updateRule(cell, value);
             if (!rule.isValid()) {
                 return "invalid";
@@ -771,9 +771,9 @@ class Ruleset {
         }
         return new Ruleset(newRules);
     }
-    // return all cell values that are distinctly determined by this set of rules
+    // return all cell values that are determined by a single rule
     // return "invalid", if there was a contradiction
-    getFixedCellValues() {
+    getCellValuesFromSolvedRules() {
         let fixedCellValues = new Map();
         for (let rule of this.rules) {
             if (rule.numberOfMines == 0) {
