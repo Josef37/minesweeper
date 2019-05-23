@@ -5,8 +5,14 @@ This project is a simple [minesweeper](https://en.wikipedia.org/wiki/Minesweeper
 
 The solver generates all valid mine configurations and then adds them up to get a probability distribution.
 
+## How to run
+Open `deploy/index.html` in your preferred browser
+
+## How to setup this project
+Good old `npm install`
+
 ## Settings and controls (before UI)
-* In main.js change `let gameboard = new Gameboard(width, height, totalNumberOfMines, isSaveFirstAction=true)`.
+* In `bundle.js` change `let gameboard = new gameboard_1.Gameboard(width, height, totalNumberOfMines, isSaveFirstAction=true)`.
 * Left-click on an unrevealed cell to reveal it.
 * Right-click on an unrevealed cell to flag it (and block revealing).
 * Left-click on a revealed cell, with mine count and number of flags matching, to reveal all adjacent cells.
