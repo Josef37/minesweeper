@@ -1,4 +1,4 @@
-import { Gameboard } from './gameboard';
+import { Gameboard, GameStatus } from './gameboard';
 import { Cell } from './cell';
 
 let gameboard: Gameboard;
@@ -32,47 +32,75 @@ test("save board creation has no mine but count is matching", () => {
 test("action on neighbours in corner", () => {
   let coordinates: number[][] = [];
   gameboard.doForAllNeighbours(0, 0, (_neighbour, neighbourX, neighbourY) => coordinates.push([neighbourX, neighbourY]));
-  expect(coordinates).toEqual([[0,1],[1,0],[1,1]]);
+  expect(coordinates).toEqual([[0, 1], [1, 0], [1, 1]]);
 });
 
 test("action on neighbours on edge", () => {
   let coordinates: number[][] = [];
   gameboard.doForAllNeighbours(1, 0, (_neighbour, neighbourX, neighbourY) => coordinates.push([neighbourX, neighbourY]));
-  expect(coordinates).toEqual([[0,0],[0,1],[1,1],[2,0],[2,1]]);
+  expect(coordinates).toEqual([[0, 0], [0, 1], [1, 1], [2, 0], [2, 1]]);
 });
 
 test("action on neighbours in center", () => {
   let coordinates: number[][] = [];
   gameboard.doForAllNeighbours(1, 1, (_neighbour, neighbourX, neighbourY) => coordinates.push([neighbourX, neighbourY]));
-  expect(coordinates).toEqual([[0,0],[0,1],[0,2],[1,0],[1,2],[2,0],[2,1],[2,2]]);
+  expect(coordinates).toEqual([[0, 0], [0, 1], [0, 2], [1, 0], [1, 2], [2, 0], [2, 1], [2, 2]]);
 });
 
-//doAction
+test("no action performed when gameover, coordinates invalid or clicked flagged cell", () => {
+  gameboard.flagCell(0, 0);
+  expect(gameboard.doAction(0, 0)).toBe(false);
+  expect(gameboard.doAction(-1, 0)).toBe(false);
+  gameboard.doAction(2, 0); // mine revealed
+  expect(gameboard.doAction(1, 1)).toBe(false);
+});
+
+test("lose game on mine revealing", () => {
+  expect(gameboard.gameStatus).toEqual(GameStatus.Playing);
+  gameboard.doAction(2, 0);
+  expect(gameboard.gameStatus).toEqual(GameStatus.Lost);
+});
+
+test("win game when only mines left", () => {
+  for (let [x, y] of [[0, 0], [4, 0], [3, 1], [0, 2], [4, 4]]) {
+    expect(gameboard.gameStatus).toEqual(GameStatus.Playing);
+    gameboard.doAction(x, y);
+  }
+  expect(gameboard.gameStatus).toEqual(GameStatus.Won);
+});
+
+test("do nothing when clicking a second time", () => {
+  expect(gameboard.doAction(0, 0)).toBe(true);
+  expect(gameboard.doAction(0, 0)).toBe(false);
+  expect(gameboard.doAction(0, 2)).toBe(true);
+  expect(gameboard.doAction(0, 2)).toBe(false);
+});
+
 test("don't auto reveal cells when number of flags is not the same", () => {
-  gameboard.revealCell(1,1);
+  gameboard.revealCell(1, 1);
   let revealedCells = new Set();
   expect(gameboard.autoRevealCells(1, 1, revealedCells)).toBe(false);
   expect(revealedCells.size).toBe(0);
-  gameboard.flagCell(0,0);
-  gameboard.flagCell(1,0);
+  gameboard.flagCell(0, 0);
+  gameboard.flagCell(1, 0);
   expect(gameboard.autoRevealCells(1, 1, revealedCells)).toBe(false);
   expect(revealedCells.size).toBe(0);
 });
 
 test("auto reveal can lose you a game when flags are set wrong", () => {
-  gameboard.revealCell(1,1);
-  gameboard.flagCell(0,0);
-  gameboard.flagCell(1,0);
-  gameboard.flagCell(2,0);
+  gameboard.revealCell(1, 1);
+  gameboard.flagCell(0, 0);
+  gameboard.flagCell(1, 0);
+  gameboard.flagCell(2, 0);
   let revealedCells = new Set();
   expect(gameboard.autoRevealCells(1, 1, revealedCells)).toBe(true);
   expect(revealedCells.size).toBeGreaterThan(0);
 });
 
 test("auto reveal can start a cascade", () => {
-  gameboard.revealCell(2,2);
-  gameboard.flagCell(2,1);
-  gameboard.flagCell(1,2);
+  gameboard.revealCell(2, 2);
+  gameboard.flagCell(2, 1);
+  gameboard.flagCell(1, 2);
   let revealedCells = new Set();
   expect(gameboard.autoRevealCells(2, 2, revealedCells)).toBe(false);
   expect(revealedCells.size).toBe(14);
@@ -91,24 +119,24 @@ test("reveal only one cell when number of adjacent mines is greater than 0", () 
 });
 
 test("detect that mine was revealed", () => {
-  expect(gameboard.revealCell(2,0)).toBe(true);
+  expect(gameboard.revealCell(2, 0)).toBe(true);
 });
 
 test("remaining mines count", () => {
-  gameboard.doAction(0,0);
-  gameboard.flagCell(0,0);  // revealed
-  gameboard.flagCell(2,0);  // not revealed
+  gameboard.doAction(0, 0);
+  gameboard.flagCell(0, 0);  // revealed
+  gameboard.flagCell(2, 0);  // not revealed
   expect(gameboard.countRemainingMines()).toBe(4);
 });
 
 test("valid coordinates check", () => {
   gameboard = new Gameboard(10, 5, 0);
-  expect(gameboard.areValidCoordinates(0,0)).toBe(true);
-  expect(gameboard.areValidCoordinates(9,0)).toBe(true);
-  expect(gameboard.areValidCoordinates(0,4)).toBe(true);
-  expect(gameboard.areValidCoordinates(9,4)).toBe(true);
-  expect(gameboard.areValidCoordinates(-1,0)).toBe(false);
-  expect(gameboard.areValidCoordinates(0,-1)).toBe(false);
-  expect(gameboard.areValidCoordinates(10,0)).toBe(false);
-  expect(gameboard.areValidCoordinates(0,5)).toBe(false);
+  expect(gameboard.areValidCoordinates(0, 0)).toBe(true);
+  expect(gameboard.areValidCoordinates(9, 0)).toBe(true);
+  expect(gameboard.areValidCoordinates(0, 4)).toBe(true);
+  expect(gameboard.areValidCoordinates(9, 4)).toBe(true);
+  expect(gameboard.areValidCoordinates(-1, 0)).toBe(false);
+  expect(gameboard.areValidCoordinates(0, -1)).toBe(false);
+  expect(gameboard.areValidCoordinates(10, 0)).toBe(false);
+  expect(gameboard.areValidCoordinates(0, 5)).toBe(false);
 });

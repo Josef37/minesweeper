@@ -484,6 +484,7 @@ class Gameboard {
         if (this.gameStatus != GameStatus.Playing || !this.areValidCoordinates(x, y)) {
             return;
         }
+        this.drawProbabilityMap = false;
         this.board[x][y].toggleFlag();
     }
     // count the number of remaining mines considering flagged cells
