@@ -10,7 +10,6 @@ export enum GameStatus {
 
 export class Gameboard {
   board: Cell[][];
-  numberOfUnrevealedCells: number;
   gameStatus: GameStatus;
   cellSizeInCanvas: number;
   drawProbabilityMap: boolean = false;
@@ -22,7 +21,8 @@ export class Gameboard {
   constructor(public width: number,
     public height: number,
     public totalNumberOfMines: number,
-    public isSaveFirstAction = true) {
+    public isSaveFirstAction: boolean = true,
+    public seed?: number) {
     this.reset();
   }
 
@@ -32,7 +32,6 @@ export class Gameboard {
     this.highlightedX = -1;
     this.highlightedY = -1;
     this.chanceOfSurvial = 1;
-    this.numberOfUnrevealedCells = this.width * this.height;
     this.createBoard();
   }
 
@@ -40,7 +39,7 @@ export class Gameboard {
   createBoard() {
     let hasMine = Array(this.totalNumberOfMines).fill(true).concat(
       Array(this.width * this.height - this.totalNumberOfMines).fill(false));
-    Utils.shuffle(hasMine);
+    Utils.shuffle(hasMine, this.seed);
     this.createBoardFromArray(hasMine);
   }
 
@@ -49,7 +48,7 @@ export class Gameboard {
   createBoardSave(x: number, y: number) {
     let hasMine = Array(this.totalNumberOfMines).fill(true).concat(
       Array(this.width * this.height - this.totalNumberOfMines - 1).fill(false));
-    Utils.shuffle(hasMine);
+    Utils.shuffle(hasMine, this.seed);
     hasMine.splice(Utils.getIndex(x, y, this.width), 0, false);
     this.createBoardFromArray(hasMine);
   }
@@ -114,10 +113,9 @@ export class Gameboard {
       mineRevealed = this.revealCell(x, y, newRevealedCells);
     }
 
-    this.numberOfUnrevealedCells -= newRevealedCells.size;
     if (mineRevealed) {
       this.gameStatus = GameStatus.Lost;
-    } else if (this.numberOfUnrevealedCells == this.totalNumberOfMines) {
+    } else if (this.getNumberOfUnrevealedCells() == this.totalNumberOfMines) {
       this.gameStatus = GameStatus.Won;
     }
     return newRevealedCells.size > 0;
@@ -187,7 +185,18 @@ export class Gameboard {
 
   // return if no cell is revealed
   isInitialState() {
-    return this.numberOfUnrevealedCells == this.width * this.height;
+    return this.getNumberOfUnrevealedCells() == this.width * this.height;
+  }
+
+  // count the total number of unrevealed cells
+  getNumberOfUnrevealedCells() {
+    let numberOfUnrevealedCells = 0;
+    for (let x = 0; x < this.width; x++) {
+      for (let y = 0; y < this.height; y++) {
+        numberOfUnrevealedCells += Number(!this.board[x][y].isRevealed);
+      }
+    }
+    return numberOfUnrevealedCells;
   }
 
   // canvas position -> grid position

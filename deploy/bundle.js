@@ -348,11 +348,12 @@ var GameStatus;
     GameStatus["Lost"] = "You've lost...";
 })(GameStatus = exports.GameStatus || (exports.GameStatus = {}));
 class Gameboard {
-    constructor(width, height, totalNumberOfMines, isSaveFirstAction = true) {
+    constructor(width, height, totalNumberOfMines, isSaveFirstAction = true, seed) {
         this.width = width;
         this.height = height;
         this.totalNumberOfMines = totalNumberOfMines;
         this.isSaveFirstAction = isSaveFirstAction;
+        this.seed = seed;
         this.drawProbabilityMap = false;
         this.reset();
     }
@@ -362,20 +363,19 @@ class Gameboard {
         this.highlightedX = -1;
         this.highlightedY = -1;
         this.chanceOfSurvial = 1;
-        this.numberOfUnrevealedCells = this.width * this.height;
         this.createBoard();
     }
     // create cells with "totalNumberOfMines"
     createBoard() {
         let hasMine = Array(this.totalNumberOfMines).fill(true).concat(Array(this.width * this.height - this.totalNumberOfMines).fill(false));
-        utils_1.Utils.shuffle(hasMine);
+        utils_1.Utils.shuffle(hasMine, this.seed);
         this.createBoardFromArray(hasMine);
     }
     // create cells with "totalNumberOfMines"
     // makes sure no mine is at position (x,y)
     createBoardSave(x, y) {
         let hasMine = Array(this.totalNumberOfMines).fill(true).concat(Array(this.width * this.height - this.totalNumberOfMines - 1).fill(false));
-        utils_1.Utils.shuffle(hasMine);
+        utils_1.Utils.shuffle(hasMine, this.seed);
         hasMine.splice(utils_1.Utils.getIndex(x, y, this.width), 0, false);
         this.createBoardFromArray(hasMine);
     }
@@ -434,11 +434,10 @@ class Gameboard {
         else {
             mineRevealed = this.revealCell(x, y, newRevealedCells);
         }
-        this.numberOfUnrevealedCells -= newRevealedCells.size;
         if (mineRevealed) {
             this.gameStatus = GameStatus.Lost;
         }
-        else if (this.numberOfUnrevealedCells == this.totalNumberOfMines) {
+        else if (this.getNumberOfUnrevealedCells() == this.totalNumberOfMines) {
             this.gameStatus = GameStatus.Won;
         }
         return newRevealedCells.size > 0;
@@ -502,7 +501,17 @@ class Gameboard {
     }
     // return if no cell is revealed
     isInitialState() {
-        return this.numberOfUnrevealedCells == this.width * this.height;
+        return this.getNumberOfUnrevealedCells() == this.width * this.height;
+    }
+    // count the total number of unrevealed cells
+    getNumberOfUnrevealedCells() {
+        let numberOfUnrevealedCells = 0;
+        for (let x = 0; x < this.width; x++) {
+            for (let y = 0; y < this.height; y++) {
+                numberOfUnrevealedCells += Number(!this.board[x][y].isRevealed);
+            }
+        }
+        return numberOfUnrevealedCells;
     }
     // canvas position -> grid position
     transpose(canvasX, canvasY) {
