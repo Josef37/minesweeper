@@ -43,7 +43,6 @@ describe("testing Utils", () => {
     for (let [n, k1, k2, kMin] of [[10, 8, 4, 3], [50, 40, 25, 20], [50, 45, 40, 25]]) {
       let ratioOriginal = Utils.choose(n, k1) / Utils.choose(n, k2);
       let ratioReduced = Utils.reducedBinomial(n, k1, kMin) / Utils.reducedBinomial(n, k2, kMin);
-      console.log(Utils.reducedBinomial(n, k1, kMin));
       expect(ratioOriginal).toBeCloseTo(ratioReduced);
     }
   });
@@ -66,8 +65,8 @@ describe("Testing Multimap", () => {
     let map = new Multimap();
     map.set(1, 2);
     map.set(1, 3);
-    expect(map.delete(1, 4)).toBeFalsy();
-    expect(map.delete(2)).toBeFalsy();
+    expect(map.delete(1, 4)).toBe(false);
+    expect(map.delete(2)).toBe(false);
     map.delete(1, 3);
     expect(map.get(1).size).toBe(1);
     map.delete(1,2);

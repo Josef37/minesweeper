@@ -2,18 +2,18 @@ import { Rule } from './rule';
 
 test("Test validity detection", () => {
   let rule = new Rule(0, []);
-  expect(rule.isValid()).toBeTruthy();
+  expect(rule.isValid()).toBe(true);
   rule = new Rule(-1, []);
-  expect(rule.isValid()).toBeFalsy();
+  expect(rule.isValid()).toBe(false);
   rule = new Rule(2, [1,2]);
-  expect(rule.isValid()).toBeTruthy();
+  expect(rule.isValid()).toBe(true);
   rule = new Rule(2, [1]);
-  expect(rule.isValid()).toBeFalsy();
+  expect(rule.isValid()).toBe(false);
 });
 
 test("Test waste detection", () => {
   let rule = new Rule(0, []);
-  expect(rule.isWaste()).toBeTruthy();
+  expect(rule.isWaste()).toBe(true);
 });
 
 test("Modifying cell not in rule doesn't affect rule", () => {
