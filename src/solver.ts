@@ -56,44 +56,27 @@ export class Solver {
   // return all visible rules as an array
   rulesFromGameboard(): Rule[] {
     let rules = [];
-    this.unclearCellsWithoutRule = this.getUnclearCells();
-    for (let x = 0; x < this.gameboard.width; x++) {
-      for (let y = 0; y < this.gameboard.height; y++) {
-        let cell = this.gameboard.board[x][y];
-        if (!cell.isRevealed) {
-          continue;
-        }
-        let numberOfMinesInRule = cell.numberOfAdjacentMines;
-        let cellsInRule: number[] = [];
-        this.gameboard.doForAllNeighbours(x, y, (neighbour, neighbourX, neighbourY) => {
-          if (!neighbour.isRevealed && neighbour.isFlagged) {
-            numberOfMinesInRule--;
-          } else if (!neighbour.isRevealed && !neighbour.isFlagged) {
-            let neighbourIndex = Utils.getIndex(neighbourX, neighbourY, this.gameboard.width);
-            cellsInRule.push(neighbourIndex);
-            this.unclearCellsWithoutRule.delete(neighbourIndex);
-          }
-        });
-        if (cellsInRule.length > 0) {
-          rules.push(new Rule(numberOfMinesInRule, cellsInRule));
-        }
+    this.unclearCellsWithoutRule = this.gameboard.getUnclearCellIndices();
+    this.gameboard.doForAllCells((cell, x, y) => {
+      if (!cell.isRevealed) {
+        return;
       }
-    }
+      let numberOfMinesInRule = cell.numberOfAdjacentMines;
+      let cellsInRule: number[] = [];
+      this.gameboard.doForAllNeighbours(x, y, (neighbour, neighbourX, neighbourY) => {
+        if (!neighbour.isRevealed && neighbour.isFlagged) {
+          numberOfMinesInRule--;
+        } else if (!neighbour.isRevealed && !neighbour.isFlagged) {
+          let neighbourIndex = Utils.getIndex(neighbourX, neighbourY, this.gameboard.width);
+          cellsInRule.push(neighbourIndex);
+          this.unclearCellsWithoutRule.delete(neighbourIndex);
+        }
+      });
+      if (cellsInRule.length > 0) {
+        rules.push(new Rule(numberOfMinesInRule, cellsInRule));
+      }
+    });
     return rules;
-  }
-
-  // return a set of all cells that are not revealed or flagged
-  getUnclearCells(): Set<number> {
-    let unclearCells = new Set();
-    for (let x = 0; x < this.gameboard.width; x++) {
-      for (let y = 0; y < this.gameboard.height; y++) {
-        let cell = this.gameboard.board[x][y];
-        if (!cell.isRevealed && !cell.isFlagged) {
-          unclearCells.add(Utils.getIndex(x, y, this.gameboard.width));
-        }
-      }
-    }
-    return unclearCells;
   }
 
   // compute and execute action

@@ -7,7 +7,7 @@ beforeEach(() => {
   gameboard = new Gameboard(5, 5, 5, false, 0);
 });
 
-test("board creation", () => {
+test("board creation is consistent with seed", () => {
   let mines = gameboard.board.map((column: Cell[]) => column.map((cell: Cell) => cell.hasMine));
   // mirrored on main diagonal, because x is first coordinate in array
   expect(mines).toEqual([
@@ -17,6 +17,29 @@ test("board creation", () => {
     [true, false, false, false, false],
     [false, true, false, false, false]
   ]);
+});
+
+test("board creation is random over 10000 samples (probability matches first digit)", () => {
+  let width = 10;
+  let height = 10;
+  let numberOfMinesPerGameboard = 50;
+  let iterations = 10000;
+  let sumOfMines: number[][] = [];
+  for (let x = 0; x < width; x++) {
+    sumOfMines[x] = [];
+    for (let y = 0; y < height; y++) {
+      sumOfMines[x][y] = 0;
+    }
+  }
+  for (let seed = 0; seed < iterations; seed++) {
+    gameboard = new Gameboard(width, height, numberOfMinesPerGameboard, false, seed);
+    gameboard.doForAllCells((cell, x, y) => {
+      sumOfMines[x][y] += Number(cell.hasMine);
+    });
+  }
+  gameboard.doForAllCells((_cell, x, y) => {
+    expect(sumOfMines[x][y] / iterations).toBeCloseTo(numberOfMinesPerGameboard / (width * height), 1);
+  });
 });
 
 test("save board creation has no mine but count is matching", () => {
@@ -127,6 +150,13 @@ test("remaining mines count", () => {
   gameboard.flagCell(0, 0);  // revealed
   gameboard.flagCell(2, 0);  // not revealed
   expect(gameboard.countRemainingMines()).toBe(4);
+});
+
+test("unclear cells indices are detected correctly", () => {
+  gameboard.doAction(4, 4);
+  gameboard.flagCell(0, 2);
+  gameboard.flagCell(1, 2);
+  expect(gameboard.getUnclearCellIndices()).toEqual(new Set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]));
 });
 
 test("valid coordinates check", () => {

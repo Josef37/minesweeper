@@ -389,14 +389,19 @@ class Gameboard {
                 this.board[x][y] = new cell_1.Cell(hasMine[utils_1.Utils.getIndex(x, y, this.width)]);
             }
         }
+        this.doForAllCells((cell, x, y) => {
+            if (cell.hasMine) {
+                return;
+            }
+            let numberOfAdjacentMines = 0;
+            this.doForAllNeighbours(x, y, neighbour => numberOfAdjacentMines += Number(neighbour.hasMine));
+            cell.setNumberOfAdjacentMines(numberOfAdjacentMines);
+        });
+    }
+    doForAllCells(callback) {
         for (let x = 0; x < this.width; x++) {
             for (let y = 0; y < this.height; y++) {
-                if (this.board[x][y].hasMine) {
-                    continue;
-                }
-                let numberOfAdjacentMines = 0;
-                this.doForAllNeighbours(x, y, cell => numberOfAdjacentMines += Number(cell.hasMine));
-                this.board[x][y].setNumberOfAdjacentMines(numberOfAdjacentMines);
+                callback(this.board[x][y], x, y);
             }
         }
     }
@@ -490,14 +495,11 @@ class Gameboard {
     // count the number of remaining mines considering flagged cells
     countRemainingMines() {
         let numberOfFlaggedCells = 0;
-        for (let x = 0; x < this.width; x++) {
-            for (let y = 0; y < this.height; y++) {
-                let cell = this.board[x][y];
-                if (cell.isFlagged && !cell.isRevealed) {
-                    numberOfFlaggedCells++;
-                }
+        this.doForAllCells(cell => {
+            if (cell.isFlagged && !cell.isRevealed) {
+                numberOfFlaggedCells++;
             }
-        }
+        });
         return this.totalNumberOfMines - numberOfFlaggedCells;
     }
     // return if no cell is revealed
@@ -507,12 +509,20 @@ class Gameboard {
     // count the total number of unrevealed cells
     getNumberOfUnrevealedCells() {
         let numberOfUnrevealedCells = 0;
-        for (let x = 0; x < this.width; x++) {
-            for (let y = 0; y < this.height; y++) {
-                numberOfUnrevealedCells += Number(!this.board[x][y].isRevealed);
-            }
-        }
+        this.doForAllCells(cell => {
+            numberOfUnrevealedCells += Number(!cell.isRevealed);
+        });
         return numberOfUnrevealedCells;
+    }
+    // return a set of all cells that are not revealed or flagged
+    getUnclearCellIndices() {
+        let unclearCells = new Set();
+        this.doForAllCells((cell, x, y) => {
+            if (!cell.isRevealed && !cell.isFlagged) {
+                unclearCells.add(utils_1.Utils.getIndex(x, y, this.width));
+            }
+        });
+        return unclearCells;
     }
     // canvas position -> grid position
     transpose(canvasX, canvasY) {
@@ -554,11 +564,9 @@ class Gameboard {
         context.clearRect(0, 0, width, height);
         width = this.width * this.cellSizeInCanvas;
         height = this.height * this.cellSizeInCanvas;
-        for (let x = 0; x < this.width; x++) {
-            for (let y = 0; y < this.height; y++) {
-                this.board[x][y].draw(context, x * this.cellSizeInCanvas, y * this.cellSizeInCanvas, this.cellSizeInCanvas, this.gameStatus != GameStatus.Playing);
-            }
-        }
+        this.doForAllCells((cell, x, y) => {
+            cell.draw(context, x * this.cellSizeInCanvas, y * this.cellSizeInCanvas, this.cellSizeInCanvas, this.gameStatus != GameStatus.Playing);
+        });
         // mines remaining counter
         context.fillStyle = "black";
         context.textAlign = "right";
@@ -607,10 +615,10 @@ function main() {
     let width;
     let height;
     let padding = 50;
-    // let gameboard = new Gameboard(5, 5, 5);
+    let gameboard = new gameboard_1.Gameboard(5, 5, 5, false, 0);
     // let gameboard = new Gameboard(8, 8, 10);
     // let gameboard = new Gameboard(16, 16, 40);
-    let gameboard = new gameboard_1.Gameboard(30, 16, 99);
+    // let gameboard = new Gameboard(30, 16, 99);
     // let gameboard = new Gameboard(100, 100, 100*100*0.2);
     let solver;
     resizeCanvas();
@@ -868,44 +876,28 @@ class Solver {
     // return all visible rules as an array
     rulesFromGameboard() {
         let rules = [];
-        this.unclearCellsWithoutRule = this.getUnclearCells();
-        for (let x = 0; x < this.gameboard.width; x++) {
-            for (let y = 0; y < this.gameboard.height; y++) {
-                let cell = this.gameboard.board[x][y];
-                if (!cell.isRevealed) {
-                    continue;
-                }
-                let numberOfMinesInRule = cell.numberOfAdjacentMines;
-                let cellsInRule = [];
-                this.gameboard.doForAllNeighbours(x, y, (neighbour, neighbourX, neighbourY) => {
-                    if (!neighbour.isRevealed && neighbour.isFlagged) {
-                        numberOfMinesInRule--;
-                    }
-                    else if (!neighbour.isRevealed && !neighbour.isFlagged) {
-                        let neighbourIndex = utils_1.Utils.getIndex(neighbourX, neighbourY, this.gameboard.width);
-                        cellsInRule.push(neighbourIndex);
-                        this.unclearCellsWithoutRule.delete(neighbourIndex);
-                    }
-                });
-                if (cellsInRule.length > 0) {
-                    rules.push(new rule_1.Rule(numberOfMinesInRule, cellsInRule));
-                }
+        this.unclearCellsWithoutRule = this.gameboard.getUnclearCellIndices();
+        this.gameboard.doForAllCells((cell, x, y) => {
+            if (!cell.isRevealed) {
+                return;
             }
-        }
+            let numberOfMinesInRule = cell.numberOfAdjacentMines;
+            let cellsInRule = [];
+            this.gameboard.doForAllNeighbours(x, y, (neighbour, neighbourX, neighbourY) => {
+                if (!neighbour.isRevealed && neighbour.isFlagged) {
+                    numberOfMinesInRule--;
+                }
+                else if (!neighbour.isRevealed && !neighbour.isFlagged) {
+                    let neighbourIndex = utils_1.Utils.getIndex(neighbourX, neighbourY, this.gameboard.width);
+                    cellsInRule.push(neighbourIndex);
+                    this.unclearCellsWithoutRule.delete(neighbourIndex);
+                }
+            });
+            if (cellsInRule.length > 0) {
+                rules.push(new rule_1.Rule(numberOfMinesInRule, cellsInRule));
+            }
+        });
         return rules;
-    }
-    // return a set of all cells that are not revealed or flagged
-    getUnclearCells() {
-        let unclearCells = new Set();
-        for (let x = 0; x < this.gameboard.width; x++) {
-            for (let y = 0; y < this.gameboard.height; y++) {
-                let cell = this.gameboard.board[x][y];
-                if (!cell.isRevealed && !cell.isFlagged) {
-                    unclearCells.add(utils_1.Utils.getIndex(x, y, this.gameboard.width));
-                }
-            }
-        }
-        return unclearCells;
     }
     // compute and execute action
     solve() {

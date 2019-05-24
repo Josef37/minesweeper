@@ -64,14 +64,20 @@ export class Gameboard {
       }
     }
 
+    this.doForAllCells((cell, x, y) => {
+      if (cell.hasMine) {
+        return;
+      }
+      let numberOfAdjacentMines = 0;
+      this.doForAllNeighbours(x, y, neighbour => numberOfAdjacentMines += Number(neighbour.hasMine));
+      cell.setNumberOfAdjacentMines(numberOfAdjacentMines);
+    });
+  }
+
+  doForAllCells(callback: (cell: Cell, x: number, y: number) => void) {
     for (let x = 0; x < this.width; x++) {
       for (let y = 0; y < this.height; y++) {
-        if (this.board[x][y].hasMine) {
-          continue;
-        }
-        let numberOfAdjacentMines = 0;
-        this.doForAllNeighbours(x, y, cell => numberOfAdjacentMines += Number(cell.hasMine));
-        this.board[x][y].setNumberOfAdjacentMines(numberOfAdjacentMines);
+        callback(this.board[x][y], x, y);
       }
     }
   }
@@ -173,14 +179,11 @@ export class Gameboard {
   // count the number of remaining mines considering flagged cells
   countRemainingMines() {
     let numberOfFlaggedCells = 0;
-    for (let x = 0; x < this.width; x++) {
-      for (let y = 0; y < this.height; y++) {
-        let cell = this.board[x][y];
-        if (cell.isFlagged && !cell.isRevealed) {
-          numberOfFlaggedCells++;
-        }
+    this.doForAllCells(cell => {
+      if (cell.isFlagged && !cell.isRevealed) {
+        numberOfFlaggedCells++;
       }
-    }
+    });
     return this.totalNumberOfMines - numberOfFlaggedCells;
   }
 
@@ -192,12 +195,21 @@ export class Gameboard {
   // count the total number of unrevealed cells
   getNumberOfUnrevealedCells() {
     let numberOfUnrevealedCells = 0;
-    for (let x = 0; x < this.width; x++) {
-      for (let y = 0; y < this.height; y++) {
-        numberOfUnrevealedCells += Number(!this.board[x][y].isRevealed);
-      }
-    }
+    this.doForAllCells(cell => {
+      numberOfUnrevealedCells += Number(!cell.isRevealed);
+    });
     return numberOfUnrevealedCells;
+  }
+
+  // return a set of all cells that are not revealed or flagged
+  getUnclearCellIndices(): Set<number> {
+    let unclearCells = new Set();
+    this.doForAllCells((cell, x, y) => {
+      if (!cell.isRevealed && !cell.isFlagged) {
+        unclearCells.add(Utils.getIndex(x, y, this.width));
+      }
+    });
+    return unclearCells;
   }
 
   // canvas position -> grid position
@@ -243,11 +255,9 @@ export class Gameboard {
     context.clearRect(0, 0, width, height);
     width = this.width * this.cellSizeInCanvas;
     height = this.height * this.cellSizeInCanvas;
-    for (let x = 0; x < this.width; x++) {
-      for (let y = 0; y < this.height; y++) {
-        this.board[x][y].draw(context, x * this.cellSizeInCanvas, y * this.cellSizeInCanvas, this.cellSizeInCanvas, this.gameStatus != GameStatus.Playing);
-      }
-    }
+    this.doForAllCells((cell, x, y) => {
+      cell.draw(context, x * this.cellSizeInCanvas, y * this.cellSizeInCanvas, this.cellSizeInCanvas, this.gameStatus != GameStatus.Playing);
+    });
     // mines remaining counter
     context.fillStyle = "black";
     context.textAlign = "right";
