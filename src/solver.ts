@@ -12,9 +12,10 @@ export class Solver {
   numberOfRemainingMines: number;
   mineProbabilityMap: Map<number, number>;
   cellsByPriority: number[];
+  nextAction: { cellsToReveal: any; cellsToFlag: any; };
 
-  constructor(public gameboard: Gameboard,
-    public nextAction = { cellsToReveal: new Set([0]), cellsToFlag: new Set() }) {
+  // add a comprehensive rule to cover all remaining mines (for testing purposes)
+  constructor(public gameboard: Gameboard, public addComprehensiveRule = false) {
     this.numberOfRemainingMines = gameboard.countRemainingMines();
     this.generateRulesetsFromGameboard();
     this.mineProbabilityMap = this.computeProbabilityMap();
@@ -76,21 +77,21 @@ export class Solver {
         rules.push(new Rule(numberOfMinesInRule, cellsInRule));
       }
     });
+    if (this.addComprehensiveRule) {
+      let unrevealedCells = [];
+      this.gameboard.doForAllCells((cell, x, y) => {
+        if (!cell.isRevealed && !cell.isFlagged)
+          unrevealedCells.push(Utils.getIndex(x, y, this.gameboard.width));
+      });
+      rules.push(new Rule(this.numberOfRemainingMines, unrevealedCells));
+    }
     return rules;
   }
 
   // compute and execute action
   solve() {
-    this.computeAction();
+    this.nextAction = this.decideNextAction(this.mineProbabilityMap);
     this.doAction();
-  }
-
-  // compute the next action to take
-  computeAction() {
-    if (this.gameboard.isInitialState()) {
-      return;
-    }
-    this.nextAction = this.decideAction(this.mineProbabilityMap);
   }
 
   // reveal and flag cells given by next action
@@ -159,12 +160,14 @@ export class Solver {
 
   // TODO When unsafe, consider opening corners first (or any other rule)
   // Given the probability of cell containing mines, compute action to take next
-  decideAction(mineProbabilityMap: Map<number, number>) {
+  decideNextAction(mineProbabilityMap: Map<number, number>) {
     let action = { cellsToReveal: new Set(), cellsToFlag: new Set() };
     let leastRisk = Math.min(...mineProbabilityMap.values());
     if (Math.abs(leastRisk) > Number.EPSILON) { // open only one cell with least mine probability
-      console.log("Now guessing with chance of failure of", leastRisk);
-      console.log("Survial chance up to this point", this.gameboard.chanceOfSurvial *= (1 - leastRisk));
+      if (!(this.gameboard.isSaveFirstAction && this.gameboard.isInitialState())) {
+        console.log("Now guessing with chance of failure of", leastRisk);
+        console.log("Survial chance up to this point", this.gameboard.chanceOfSurvial *= (1 - leastRisk));
+      }
       let leastRiskCells = new Set();
       for (let [cell, value] of mineProbabilityMap) {
         if (Math.abs(value - leastRisk) < Number.EPSILON) {

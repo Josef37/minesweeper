@@ -1,15 +1,15 @@
 # Minesweeper
 ## TypeScript minesweeper with solver
 
-This project is a simple [minesweeper](https://en.wikipedia.org/wiki/Minesweeper_(video_game)) game with an automatic solver.
-
-The solver generates all valid mine configurations and then adds them up to get a probability distribution.
+This project is a simple [minesweeper](https://en.wikipedia.org/wiki/Minesweeper_(video_game)) game with an automatic solver, which computes a probability distribution of mines.
 
 ## How to run
 Open `deploy/index.html` in your preferred browser
 
 ## How to setup this project
-Good old `npm install`
+1. Good old `npm install`
+1. Use Browserify to build:
+`browserify src/main.ts -p [ tsify ] -o deploy/bundle.js`
 
 ## Settings and controls (before UI)
 * In `bundle.js` change `let gameboard = new gameboard_1.Gameboard(width, height, totalNumberOfMines, isSaveFirstAction=true)`.

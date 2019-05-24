@@ -10,9 +10,9 @@ function main() {
   let height: number;
   let padding: number = 50;
 
-  let gameboard = new Gameboard(5, 5, 5, false, 0);
+  // let gameboard = new Gameboard(5, 5, 5, false, 0);
   // let gameboard = new Gameboard(8, 8, 10);
-  // let gameboard = new Gameboard(16, 16, 40);
+  let gameboard = new Gameboard(16, 16, 40);
   // let gameboard = new Gameboard(30, 16, 99);
   // let gameboard = new Gameboard(100, 100, 100*100*0.2);
   let solver: Solver;

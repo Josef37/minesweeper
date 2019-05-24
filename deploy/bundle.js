@@ -615,9 +615,9 @@ function main() {
     let width;
     let height;
     let padding = 50;
-    let gameboard = new gameboard_1.Gameboard(5, 5, 5, false, 0);
+    // let gameboard = new Gameboard(5, 5, 5, false, 0);
     // let gameboard = new Gameboard(8, 8, 10);
-    // let gameboard = new Gameboard(16, 16, 40);
+    let gameboard = new gameboard_1.Gameboard(16, 16, 40);
     // let gameboard = new Gameboard(30, 16, 99);
     // let gameboard = new Gameboard(100, 100, 100*100*0.2);
     let solver;
@@ -832,9 +832,10 @@ const configuration_1 = require("./configuration");
 // solving one specific gameboard by calculating mine probabilities for every cell
 // in the solving domain, cells are always identified by index, not coordinates
 class Solver {
-    constructor(gameboard, nextAction = { cellsToReveal: new Set([0]), cellsToFlag: new Set() }) {
+    // add a comprehensive rule to cover all remaining mines (for testing purposes)
+    constructor(gameboard, addComprehensiveRule = false) {
         this.gameboard = gameboard;
-        this.nextAction = nextAction;
+        this.addComprehensiveRule = addComprehensiveRule;
         this.rulesets = [];
         this.unclearCellsWithoutRule = new Set();
         this.numberOfRemainingMines = gameboard.countRemainingMines();
@@ -897,19 +898,20 @@ class Solver {
                 rules.push(new rule_1.Rule(numberOfMinesInRule, cellsInRule));
             }
         });
+        if (this.addComprehensiveRule) {
+            let unrevealedCells = [];
+            this.gameboard.doForAllCells((cell, x, y) => {
+                if (!cell.isRevealed && !cell.isFlagged)
+                    unrevealedCells.push(utils_1.Utils.getIndex(x, y, this.gameboard.width));
+            });
+            rules.push(new rule_1.Rule(this.numberOfRemainingMines, unrevealedCells));
+        }
         return rules;
     }
     // compute and execute action
     solve() {
-        this.computeAction();
+        this.nextAction = this.decideNextAction(this.mineProbabilityMap);
         this.doAction();
-    }
-    // compute the next action to take
-    computeAction() {
-        if (this.gameboard.isInitialState()) {
-            return;
-        }
-        this.nextAction = this.decideAction(this.mineProbabilityMap);
     }
     // reveal and flag cells given by next action
     doAction() {
@@ -966,12 +968,14 @@ class Solver {
     }
     // TODO When unsafe, consider opening corners first (or any other rule)
     // Given the probability of cell containing mines, compute action to take next
-    decideAction(mineProbabilityMap) {
+    decideNextAction(mineProbabilityMap) {
         let action = { cellsToReveal: new Set(), cellsToFlag: new Set() };
         let leastRisk = Math.min(...mineProbabilityMap.values());
         if (Math.abs(leastRisk) > Number.EPSILON) { // open only one cell with least mine probability
-            console.log("Now guessing with chance of failure of", leastRisk);
-            console.log("Survial chance up to this point", this.gameboard.chanceOfSurvial *= (1 - leastRisk));
+            if (!(this.gameboard.isSaveFirstAction && this.gameboard.isInitialState())) {
+                console.log("Now guessing with chance of failure of", leastRisk);
+                console.log("Survial chance up to this point", this.gameboard.chanceOfSurvial *= (1 - leastRisk));
+            }
             let leastRiskCells = new Set();
             for (let [cell, value] of mineProbabilityMap) {
                 if (Math.abs(value - leastRisk) < Number.EPSILON) {
