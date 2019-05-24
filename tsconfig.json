@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "es6",
     "module": "commonjs",
-    "lib": [ "es5", "es6", "es7", "dom", "esnext" ],
+    "lib": [ "dom", "esnext" ],
     "downlevelIteration": true,
     "outDir": "built"
   },
