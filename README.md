@@ -8,8 +8,7 @@ Open `deploy/index.html` in your preferred browser
 
 ## How to setup this project
 1. Good old `npm install`
-1. Use Browserify to build:
-`browserify src/main.ts -p [ tsify ] -o deploy/bundle.js`
+1. Build (with local browserify): `npm run build`
 
 ## Settings and controls (before UI)
 * In `bundle.js` change `let gameboard = new gameboard_1.Gameboard(width, height, totalNumberOfMines, isSaveFirstAction=true)`.
