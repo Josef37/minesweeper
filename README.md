@@ -3,6 +3,10 @@
 
 This project is a simple [minesweeper](https://en.wikipedia.org/wiki/Minesweeper_(video_game)) game with an automatic solver, which computes a probability distribution of mines.
 
+## Demo
+Thanks to GitHub Pages, here it is
+https://josef37.github.io/minesweeper/built/
+
 ## How to run
 Open `deploy/index.html` in your preferred browser
 
@@ -19,7 +23,7 @@ Open `deploy/index.html` in your preferred browser
 * Press `S` to automatically do the next action the solver suggests.
 * Press `T` to test 100 rounds of the solver (result in console)
 
-## Performance
+## Solving Performance
 At commit 9d06109 (prioritizing corner cells)
 
 | Wins | Rounds |  Rate |
