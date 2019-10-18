@@ -7,7 +7,6 @@ export enum GameStatus {
   Lost = "You've lost..."
 }
 
-
 export class Gameboard {
   board: Cell[][];
   gameStatus: GameStatus;
@@ -18,11 +17,13 @@ export class Gameboard {
   highlightedY: number;
   chanceOfSurvial: number;
 
-  constructor(public width: number,
+  constructor(
+    public width: number,
     public height: number,
     public totalNumberOfMines: number,
     public isSaveFirstAction: boolean = true,
-    public seed?: number) {
+    public seed?: number
+  ) {
     this.reset();
   }
 
@@ -37,8 +38,11 @@ export class Gameboard {
 
   // create cells with "totalNumberOfMines"
   createBoard() {
-    let hasMine = Array(this.totalNumberOfMines).fill(true).concat(
-      Array(this.width * this.height - this.totalNumberOfMines).fill(false));
+    let hasMine = Array(this.totalNumberOfMines)
+      .fill(true)
+      .concat(
+        Array(this.width * this.height - this.totalNumberOfMines).fill(false)
+      );
     Utils.shuffle(hasMine, this.seed);
     this.createBoardFromArray(hasMine);
   }
@@ -46,8 +50,13 @@ export class Gameboard {
   // create cells with "totalNumberOfMines"
   // makes sure no mine is at position (x,y)
   createBoardSave(x: number, y: number) {
-    let hasMine = Array(this.totalNumberOfMines).fill(true).concat(
-      Array(this.width * this.height - this.totalNumberOfMines - 1).fill(false));
+    let hasMine = Array(this.totalNumberOfMines)
+      .fill(true)
+      .concat(
+        Array(this.width * this.height - this.totalNumberOfMines - 1).fill(
+          false
+        )
+      );
     Utils.shuffle(hasMine, this.seed);
     hasMine.splice(Utils.getIndex(x, y, this.width), 0, false);
     this.createBoardFromArray(hasMine);
@@ -69,7 +78,11 @@ export class Gameboard {
         return;
       }
       let numberOfAdjacentMines = 0;
-      this.doForAllNeighbours(x, y, neighbour => numberOfAdjacentMines += Number(neighbour.hasMine));
+      this.doForAllNeighbours(
+        x,
+        y,
+        neighbour => (numberOfAdjacentMines += Number(neighbour.hasMine))
+      );
       cell.setNumberOfAdjacentMines(numberOfAdjacentMines);
     });
   }
@@ -83,10 +96,19 @@ export class Gameboard {
   }
 
   // perform callback for all adjacent cells
-  doForAllNeighbours(x: number, y: number, callback: (neighbour: Cell, neighbourX?: number, neighbourY?: number) => void) {
+  doForAllNeighbours(
+    x: number,
+    y: number,
+    callback: (
+      neighbour: Cell,
+      neighbourX?: number,
+      neighbourY?: number
+    ) => void
+  ) {
     for (let dx of [-1, 0, 1]) {
       for (let dy of [-1, 0, 1]) {
-        if (dx == 0 && dy == 0) {   // ignore the cell itself
+        if (dx == 0 && dy == 0) {
+          // ignore the cell itself
           continue;
         }
         let neighbourX = x + dx,
@@ -102,7 +124,11 @@ export class Gameboard {
   // action for a click on cell at (x, y)
   // return, if an action was performed
   doAction(x: number, y: number): boolean {
-    if (this.gameStatus != GameStatus.Playing || !this.areValidCoordinates(x, y) || this.board[x][y].isFlagged) {
+    if (
+      this.gameStatus != GameStatus.Playing ||
+      !this.areValidCoordinates(x, y) ||
+      this.board[x][y].isFlagged
+    ) {
       return false;
     }
     this.drawProbabilityMap = false;
@@ -132,14 +158,20 @@ export class Gameboard {
   autoRevealCells(x: number, y: number, revealedCells: Set<Cell>): boolean {
     let cell = this.board[x][y];
     let numberOfFlaggedCells = 0;
-    this.doForAllNeighbours(x, y, neighbour => numberOfFlaggedCells += Number(neighbour.isFlagged));
+    this.doForAllNeighbours(
+      x,
+      y,
+      neighbour => (numberOfFlaggedCells += Number(neighbour.isFlagged))
+    );
     if (numberOfFlaggedCells != cell.numberOfAdjacentMines) {
       return false;
     }
     let mineRevealed = false;
     this.doForAllNeighbours(x, y, (neighbour, neighbourX, neighbourY) => {
       if (!neighbour.isFlagged) {
-        mineRevealed = mineRevealed || this.revealCell(neighbourX, neighbourY, revealedCells);
+        mineRevealed =
+          mineRevealed ||
+          this.revealCell(neighbourX, neighbourY, revealedCells);
       }
     });
     return mineRevealed;
@@ -147,7 +179,11 @@ export class Gameboard {
 
   // reveal cells and propagate revealing, if there are no mines adjacent; save all revealed cells
   // returns true, if mine was revealed
-  revealCell(x: number, y: number, revealedCells: Set<Cell> = new Set()): boolean {
+  revealCell(
+    x: number,
+    y: number,
+    revealedCells: Set<Cell> = new Set()
+  ): boolean {
     let toVisit: [number, number][] = [[x, y]];
 
     while (toVisit.length > 0) {
@@ -162,14 +198,19 @@ export class Gameboard {
         return true;
       }
       if (cell.numberOfAdjacentMines == 0) {
-        this.doForAllNeighbours(x, y, (_neighbour, neighbourX, neighbourY) => toVisit.push([neighbourX, neighbourY]));
+        this.doForAllNeighbours(x, y, (_neighbour, neighbourX, neighbourY) =>
+          toVisit.push([neighbourX, neighbourY])
+        );
       }
     }
     return false;
   }
 
   flagCell(x: number, y: number) {
-    if (this.gameStatus != GameStatus.Playing || !this.areValidCoordinates(x, y)) {
+    if (
+      this.gameStatus != GameStatus.Playing ||
+      !this.areValidCoordinates(x, y)
+    ) {
       return;
     }
     this.drawProbabilityMap = false;
@@ -203,7 +244,7 @@ export class Gameboard {
 
   // return a set of all cells that are not revealed or flagged
   getUnclearCellIndices(): Set<number> {
-    let unclearCells = new Set();
+    let unclearCells: Set<number> = new Set();
     this.doForAllCells((cell, x, y) => {
       if (!cell.isRevealed && !cell.isFlagged) {
         unclearCells.add(Utils.getIndex(x, y, this.width));
@@ -214,7 +255,10 @@ export class Gameboard {
 
   // canvas position -> grid position
   transpose(canvasX: number, canvasY: number): [number, number] {
-    return [Math.floor(canvasX / this.cellSizeInCanvas), Math.floor(canvasY / this.cellSizeInCanvas)];
+    return [
+      Math.floor(canvasX / this.cellSizeInCanvas),
+      Math.floor(canvasY / this.cellSizeInCanvas)
+    ];
   }
 
   // return if coordinates are inside grid
@@ -224,14 +268,21 @@ export class Gameboard {
 
   // set highlighted cell when not gameover or probability map is drawn
   highlight(context: CanvasRenderingContext2D, x: number, y: number) {
-    if (this.drawProbabilityMap || this.gameStatus != GameStatus.Playing
-      || (x == this.highlightedX && y == this.highlightedY)) {
+    if (
+      this.drawProbabilityMap ||
+      this.gameStatus != GameStatus.Playing ||
+      (x == this.highlightedX && y == this.highlightedY)
+    ) {
       return;
     }
     if (this.areValidCoordinates(this.highlightedX, this.highlightedY)) {
       this.board[this.highlightedX][this.highlightedY].isHighlighted = false;
-      this.board[this.highlightedX][this.highlightedY]
-        .draw(context, this.highlightedX * this.cellSizeInCanvas, this.highlightedY * this.cellSizeInCanvas, this.cellSizeInCanvas);
+      this.board[this.highlightedX][this.highlightedY].draw(
+        context,
+        this.highlightedX * this.cellSizeInCanvas,
+        this.highlightedY * this.cellSizeInCanvas,
+        this.cellSizeInCanvas
+      );
     }
     if (!this.areValidCoordinates(x, y)) {
       this.highlightedX = this.highlightedY = -1;
@@ -240,33 +291,59 @@ export class Gameboard {
     this.highlightedX = x;
     this.highlightedY = y;
     this.board[x][y].isHighlighted = true;
-    this.board[x][y].draw(context, x * this.cellSizeInCanvas, y * this.cellSizeInCanvas, this.cellSizeInCanvas);
+    this.board[x][y].draw(
+      context,
+      x * this.cellSizeInCanvas,
+      y * this.cellSizeInCanvas,
+      this.cellSizeInCanvas
+    );
   }
 
-  // draw the gameboard (optional with probability map)
-  draw(context: CanvasRenderingContext2D, width: number, height: number) {
+  calculateDimensions(
+    availableWidth: number,
+    availableHeight: number
+  ): { width: number; height: number, cellSize: number } {
+    const cellSize = Math.floor(
+      Math.min(availableWidth / this.width, availableHeight / this.height)
+    );
+    const width = this.width * cellSize;
+    const height = this.height * cellSize;
+    return { width, height, cellSize };
+  }
+
+  // render the gameboard (optional with probability map)
+  render(
+    context: CanvasRenderingContext2D,
+    availableWidth: number,
+    availableHeight: number,
+    minesCounter: HTMLParagraphElement
+  ): { width: number; height: number } {
     // unset highlight for probability map
-    if (this.drawProbabilityMap && this.areValidCoordinates(this.highlightedX, this.highlightedY)) {
+    if (
+      this.drawProbabilityMap &&
+      this.areValidCoordinates(this.highlightedX, this.highlightedY)
+    ) {
       this.board[this.highlightedX][this.highlightedY].isHighlighted = false;
       this.highlightedX = this.highlightedY = -1;
     }
     // draw grid
-    this.cellSizeInCanvas = Math.floor(Math.min(width / this.width, (height / 1.1) / this.height));
-    context.clearRect(0, 0, width, height);
-    width = this.width * this.cellSizeInCanvas;
-    height = this.height * this.cellSizeInCanvas;
+    context.clearRect(0, 0, availableWidth, availableHeight);
+    const { width, height, cellSize } = this.calculateDimensions(availableWidth, availableHeight);
+    this.cellSizeInCanvas = cellSize;
     this.doForAllCells((cell, x, y) => {
-      cell.draw(context, x * this.cellSizeInCanvas, y * this.cellSizeInCanvas, this.cellSizeInCanvas, this.gameStatus != GameStatus.Playing);
+      cell.draw(
+        context,
+        x * this.cellSizeInCanvas,
+        y * this.cellSizeInCanvas,
+        this.cellSizeInCanvas,
+        this.gameStatus != GameStatus.Playing
+      );
     });
     // mines remaining counter
-    context.fillStyle = "black";
-    context.textAlign = "right";
-    context.textBaseline = "top";
-    context.font = `${height * 0.06}px sans-serif`;
-    context.fillText("Mines remaining: " + this.countRemainingMines(), width, height + height * 0.03);
+    minesCounter.textContent = this.countRemainingMines() + " mines remaining";
     // gameover overlay
     if (this.gameStatus != GameStatus.Playing) {
-      context.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      context.fillStyle = "rgba(255, 255, 255, 0.8)";
       context.fillRect(0, 0, width, height);
 
       let centerX = width / 2;
@@ -278,20 +355,35 @@ export class Gameboard {
       context.font = `${height * 0.06}px sans-serif`;
       context.fillText(this.gameStatus, centerX, centerY - 0.05 * height);
       context.font = `${height * 0.03}px sans-serif`;
-      context.fillText('(right-click to restart)', centerX, centerY + 0.025 * height);
+      context.fillText(
+        "(right-click to restart)",
+        centerX,
+        centerY + 0.025 * height
+      );
     }
 
     if (this.drawProbabilityMap) {
       for (let [cell, mineProbability] of this.mineProbabilityMap) {
         let [x, y] = Utils.getCoordinates(cell, this.width);
         context.fillStyle = `rgba(0,0,0,${mineProbability / 2})`;
-        context.fillRect(x * this.cellSizeInCanvas, y * this.cellSizeInCanvas, this.cellSizeInCanvas, this.cellSizeInCanvas);
+        context.fillRect(
+          x * this.cellSizeInCanvas,
+          y * this.cellSizeInCanvas,
+          this.cellSizeInCanvas,
+          this.cellSizeInCanvas
+        );
         context.fillStyle = "black";
         context.textAlign = "center";
         context.textBaseline = "middle";
         context.font = `${this.cellSizeInCanvas * 0.35}px sans-serif`;
-        context.fillText(mineProbability.toFixed(2), (x + 0.5) * this.cellSizeInCanvas, (y + 0.53) * this.cellSizeInCanvas);
+        context.fillText(
+          mineProbability.toFixed(2),
+          (x + 0.5) * this.cellSizeInCanvas,
+          (y + 0.53) * this.cellSizeInCanvas
+        );
       }
     }
+
+    return { width: width, height: height };
   }
 }

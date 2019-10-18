@@ -1,14 +1,18 @@
 import { Gameboard, GameStatus } from "./gameboard";
 import { Solver } from "./solver";
 
-window.addEventListener('DOMContentLoaded', main);
+window.addEventListener("DOMContentLoaded", main);
 
 function main() {
-  let canvas: HTMLCanvasElement = (<HTMLCanvasElement>document.getElementById('gameboard'));
-  let context: CanvasRenderingContext2D = canvas.getContext('2d');
+  let canvas: HTMLCanvasElement = <HTMLCanvasElement>(
+    document.getElementById("gameboard")
+  );
+  let context: CanvasRenderingContext2D = canvas.getContext("2d");
   let width: number;
   let height: number;
-  let padding: number = 50;
+  let minesCoutner: HTMLParagraphElement = <HTMLParagraphElement>(
+    document.getElementById("mines-counter")
+  );
 
   // let gameboard = new Gameboard(5, 5, 5, false, 0);
   // let gameboard = new Gameboard(8, 8, 10);
@@ -21,16 +25,21 @@ function main() {
   canvas.addEventListener("click", onclick);
   canvas.addEventListener("contextmenu", onclick);
   canvas.addEventListener("mousemove", event =>
-    gameboard.highlight(context, ...gameboard.transpose(event.clientX - padding, event.clientY - padding)));
+    gameboard.highlight(
+      context,
+      ...gameboard.transpose(...getCanvasCoordinates(event))
+    )
+  );
   window.addEventListener("resize", resizeCanvas);
   document.addEventListener("keypress", onkeypress);
 
   function onclick(event: MouseEvent) {
-    let canvasX = event.clientX - padding;
-    let canvasY = event.clientY - padding;
-    if (event.button == 0) { // Left mouse button
+    const [canvasX, canvasY] = getCanvasCoordinates(event);
+    // Left mouse button
+    if (event.button == 0) {
       gameboard.doAction(...gameboard.transpose(canvasX, canvasY));
-    } else if (event.button == 2) { // Right mouse button
+    } // Right mouse button
+    else if (event.button == 2) {
       if (gameboard.gameStatus != GameStatus.Playing) {
         gameboard.reset();
       } else {
@@ -59,6 +68,14 @@ function main() {
     console.timeEnd("solver");
   }
 
+  // return coordinates of mouse event relative to canvas
+  function getCanvasCoordinates(event: MouseEvent): [number, number] {
+    const rect = canvas.getBoundingClientRect();
+    let canvasX = event.clientX - rect.left;
+    let canvasY = event.clientY - rect.top;
+    return [canvasX, canvasY];
+  }
+
   function testSolver(iterations: number) {
     let winCount = 0;
     for (let i = 1; i <= iterations; i++) {
@@ -68,13 +85,13 @@ function main() {
         solver.solve();
       }
       winCount += Number(gameboard.gameStatus == GameStatus.Won);
-      console.log(`${winCount} of ${i} won (${100*winCount/i}%)`);
+      console.log(`${winCount} of ${i} won (${(100 * winCount) / i}%)`);
     }
     gameboard.reset();
-}
+  }
 
   function drawGameboard() {
-    gameboard.draw(context, width - 2 * padding, height - 2 * padding);
+    return gameboard.render(context, width, height, minesCoutner);
   }
 
   function drawProbabilityMap(mineProbabilityMap: Map<number, number>) {
@@ -84,10 +101,18 @@ function main() {
   }
 
   function resizeCanvas() {
-    width = canvas.width = window.innerWidth;
-    height = canvas.height = window.innerHeight;
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const availableWidth = window.innerWidth - 4 * rem;
+    const availableHeight = window.innerHeight - 8 * rem;
 
-    context.translate(padding, padding);
+    const {
+      width: canvasWidth,
+      height: canvasHeight
+    } = gameboard.calculateDimensions(availableWidth, availableHeight);
+
+    width = canvas.width = canvasWidth;
+    height = canvas.height = canvasHeight;
+
     drawGameboard();
   }
 }

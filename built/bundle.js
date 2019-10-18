@@ -367,14 +367,18 @@ class Gameboard {
     }
     // create cells with "totalNumberOfMines"
     createBoard() {
-        let hasMine = Array(this.totalNumberOfMines).fill(true).concat(Array(this.width * this.height - this.totalNumberOfMines).fill(false));
+        let hasMine = Array(this.totalNumberOfMines)
+            .fill(true)
+            .concat(Array(this.width * this.height - this.totalNumberOfMines).fill(false));
         utils_1.Utils.shuffle(hasMine, this.seed);
         this.createBoardFromArray(hasMine);
     }
     // create cells with "totalNumberOfMines"
     // makes sure no mine is at position (x,y)
     createBoardSave(x, y) {
-        let hasMine = Array(this.totalNumberOfMines).fill(true).concat(Array(this.width * this.height - this.totalNumberOfMines - 1).fill(false));
+        let hasMine = Array(this.totalNumberOfMines)
+            .fill(true)
+            .concat(Array(this.width * this.height - this.totalNumberOfMines - 1).fill(false));
         utils_1.Utils.shuffle(hasMine, this.seed);
         hasMine.splice(utils_1.Utils.getIndex(x, y, this.width), 0, false);
         this.createBoardFromArray(hasMine);
@@ -394,7 +398,7 @@ class Gameboard {
                 return;
             }
             let numberOfAdjacentMines = 0;
-            this.doForAllNeighbours(x, y, neighbour => numberOfAdjacentMines += Number(neighbour.hasMine));
+            this.doForAllNeighbours(x, y, neighbour => (numberOfAdjacentMines += Number(neighbour.hasMine)));
             cell.setNumberOfAdjacentMines(numberOfAdjacentMines);
         });
     }
@@ -409,7 +413,8 @@ class Gameboard {
     doForAllNeighbours(x, y, callback) {
         for (let dx of [-1, 0, 1]) {
             for (let dy of [-1, 0, 1]) {
-                if (dx == 0 && dy == 0) { // ignore the cell itself
+                if (dx == 0 && dy == 0) {
+                    // ignore the cell itself
                     continue;
                 }
                 let neighbourX = x + dx, neighbourY = y + dy;
@@ -423,7 +428,9 @@ class Gameboard {
     // action for a click on cell at (x, y)
     // return, if an action was performed
     doAction(x, y) {
-        if (this.gameStatus != GameStatus.Playing || !this.areValidCoordinates(x, y) || this.board[x][y].isFlagged) {
+        if (this.gameStatus != GameStatus.Playing ||
+            !this.areValidCoordinates(x, y) ||
+            this.board[x][y].isFlagged) {
             return false;
         }
         this.drawProbabilityMap = false;
@@ -452,14 +459,16 @@ class Gameboard {
     autoRevealCells(x, y, revealedCells) {
         let cell = this.board[x][y];
         let numberOfFlaggedCells = 0;
-        this.doForAllNeighbours(x, y, neighbour => numberOfFlaggedCells += Number(neighbour.isFlagged));
+        this.doForAllNeighbours(x, y, neighbour => (numberOfFlaggedCells += Number(neighbour.isFlagged)));
         if (numberOfFlaggedCells != cell.numberOfAdjacentMines) {
             return false;
         }
         let mineRevealed = false;
         this.doForAllNeighbours(x, y, (neighbour, neighbourX, neighbourY) => {
             if (!neighbour.isFlagged) {
-                mineRevealed = mineRevealed || this.revealCell(neighbourX, neighbourY, revealedCells);
+                mineRevealed =
+                    mineRevealed ||
+                        this.revealCell(neighbourX, neighbourY, revealedCells);
             }
         });
         return mineRevealed;
@@ -486,7 +495,8 @@ class Gameboard {
         return false;
     }
     flagCell(x, y) {
-        if (this.gameStatus != GameStatus.Playing || !this.areValidCoordinates(x, y)) {
+        if (this.gameStatus != GameStatus.Playing ||
+            !this.areValidCoordinates(x, y)) {
             return;
         }
         this.drawProbabilityMap = false;
@@ -526,7 +536,10 @@ class Gameboard {
     }
     // canvas position -> grid position
     transpose(canvasX, canvasY) {
-        return [Math.floor(canvasX / this.cellSizeInCanvas), Math.floor(canvasY / this.cellSizeInCanvas)];
+        return [
+            Math.floor(canvasX / this.cellSizeInCanvas),
+            Math.floor(canvasY / this.cellSizeInCanvas)
+        ];
     }
     // return if coordinates are inside grid
     areValidCoordinates(x, y) {
@@ -534,14 +547,14 @@ class Gameboard {
     }
     // set highlighted cell when not gameover or probability map is drawn
     highlight(context, x, y) {
-        if (this.drawProbabilityMap || this.gameStatus != GameStatus.Playing
-            || (x == this.highlightedX && y == this.highlightedY)) {
+        if (this.drawProbabilityMap ||
+            this.gameStatus != GameStatus.Playing ||
+            (x == this.highlightedX && y == this.highlightedY)) {
             return;
         }
         if (this.areValidCoordinates(this.highlightedX, this.highlightedY)) {
             this.board[this.highlightedX][this.highlightedY].isHighlighted = false;
-            this.board[this.highlightedX][this.highlightedY]
-                .draw(context, this.highlightedX * this.cellSizeInCanvas, this.highlightedY * this.cellSizeInCanvas, this.cellSizeInCanvas);
+            this.board[this.highlightedX][this.highlightedY].draw(context, this.highlightedX * this.cellSizeInCanvas, this.highlightedY * this.cellSizeInCanvas, this.cellSizeInCanvas);
         }
         if (!this.areValidCoordinates(x, y)) {
             this.highlightedX = this.highlightedY = -1;
@@ -552,30 +565,32 @@ class Gameboard {
         this.board[x][y].isHighlighted = true;
         this.board[x][y].draw(context, x * this.cellSizeInCanvas, y * this.cellSizeInCanvas, this.cellSizeInCanvas);
     }
-    // draw the gameboard (optional with probability map)
-    draw(context, width, height) {
+    calculateDimensions(availableWidth, availableHeight) {
+        const cellSize = Math.floor(Math.min(availableWidth / this.width, availableHeight / this.height));
+        const width = this.width * cellSize;
+        const height = this.height * cellSize;
+        return { width, height, cellSize };
+    }
+    // render the gameboard (optional with probability map)
+    render(context, availableWidth, availableHeight, minesCounter) {
         // unset highlight for probability map
-        if (this.drawProbabilityMap && this.areValidCoordinates(this.highlightedX, this.highlightedY)) {
+        if (this.drawProbabilityMap &&
+            this.areValidCoordinates(this.highlightedX, this.highlightedY)) {
             this.board[this.highlightedX][this.highlightedY].isHighlighted = false;
             this.highlightedX = this.highlightedY = -1;
         }
         // draw grid
-        this.cellSizeInCanvas = Math.floor(Math.min(width / this.width, (height / 1.1) / this.height));
-        context.clearRect(0, 0, width, height);
-        width = this.width * this.cellSizeInCanvas;
-        height = this.height * this.cellSizeInCanvas;
+        context.clearRect(0, 0, availableWidth, availableHeight);
+        const { width, height, cellSize } = this.calculateDimensions(availableWidth, availableHeight);
+        this.cellSizeInCanvas = cellSize;
         this.doForAllCells((cell, x, y) => {
             cell.draw(context, x * this.cellSizeInCanvas, y * this.cellSizeInCanvas, this.cellSizeInCanvas, this.gameStatus != GameStatus.Playing);
         });
         // mines remaining counter
-        context.fillStyle = "black";
-        context.textAlign = "right";
-        context.textBaseline = "top";
-        context.font = `${height * 0.06}px sans-serif`;
-        context.fillText("Mines remaining: " + this.countRemainingMines(), width, height + height * 0.03);
+        minesCounter.textContent = this.countRemainingMines() + " mines remaining";
         // gameover overlay
         if (this.gameStatus != GameStatus.Playing) {
-            context.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            context.fillStyle = "rgba(255, 255, 255, 0.8)";
             context.fillRect(0, 0, width, height);
             let centerX = width / 2;
             let centerY = height / 2;
@@ -585,7 +600,7 @@ class Gameboard {
             context.font = `${height * 0.06}px sans-serif`;
             context.fillText(this.gameStatus, centerX, centerY - 0.05 * height);
             context.font = `${height * 0.03}px sans-serif`;
-            context.fillText('(right-click to restart)', centerX, centerY + 0.025 * height);
+            context.fillText("(right-click to restart)", centerX, centerY + 0.025 * height);
         }
         if (this.drawProbabilityMap) {
             for (let [cell, mineProbability] of this.mineProbabilityMap) {
@@ -599,6 +614,7 @@ class Gameboard {
                 context.fillText(mineProbability.toFixed(2), (x + 0.5) * this.cellSizeInCanvas, (y + 0.53) * this.cellSizeInCanvas);
             }
         }
+        return { width: width, height: height };
     }
 }
 exports.Gameboard = Gameboard;
@@ -608,13 +624,13 @@ exports.Gameboard = Gameboard;
 Object.defineProperty(exports, "__esModule", { value: true });
 const gameboard_1 = require("./gameboard");
 const solver_1 = require("./solver");
-window.addEventListener('DOMContentLoaded', main);
+window.addEventListener("DOMContentLoaded", main);
 function main() {
-    let canvas = document.getElementById('gameboard');
-    let context = canvas.getContext('2d');
+    let canvas = (document.getElementById("gameboard"));
+    let context = canvas.getContext("2d");
     let width;
     let height;
-    let padding = 50;
+    let minesCoutner = (document.getElementById("mines-counter"));
     // let gameboard = new Gameboard(5, 5, 5, false, 0);
     // let gameboard = new Gameboard(8, 8, 10);
     let gameboard = new gameboard_1.Gameboard(16, 16, 40);
@@ -624,16 +640,16 @@ function main() {
     resizeCanvas();
     canvas.addEventListener("click", onclick);
     canvas.addEventListener("contextmenu", onclick);
-    canvas.addEventListener("mousemove", event => gameboard.highlight(context, ...gameboard.transpose(event.clientX - padding, event.clientY - padding)));
+    canvas.addEventListener("mousemove", event => gameboard.highlight(context, ...gameboard.transpose(...getCanvasCoordinates(event))));
     window.addEventListener("resize", resizeCanvas);
     document.addEventListener("keypress", onkeypress);
     function onclick(event) {
-        let canvasX = event.clientX - padding;
-        let canvasY = event.clientY - padding;
-        if (event.button == 0) { // Left mouse button
+        const [canvasX, canvasY] = getCanvasCoordinates(event);
+        // Left mouse button
+        if (event.button == 0) {
             gameboard.doAction(...gameboard.transpose(canvasX, canvasY));
-        }
-        else if (event.button == 2) { // Right mouse button
+        } // Right mouse button
+        else if (event.button == 2) {
             if (gameboard.gameStatus != gameboard_1.GameStatus.Playing) {
                 gameboard.reset();
             }
@@ -663,6 +679,13 @@ function main() {
         }
         console.timeEnd("solver");
     }
+    // return coordinates of mouse event relative to canvas
+    function getCanvasCoordinates(event) {
+        const rect = canvas.getBoundingClientRect();
+        let canvasX = event.clientX - rect.left;
+        let canvasY = event.clientY - rect.top;
+        return [canvasX, canvasY];
+    }
     function testSolver(iterations) {
         let winCount = 0;
         for (let i = 1; i <= iterations; i++) {
@@ -672,12 +695,12 @@ function main() {
                 solver.solve();
             }
             winCount += Number(gameboard.gameStatus == gameboard_1.GameStatus.Won);
-            console.log(`${winCount} of ${i} won (${100 * winCount / i}%)`);
+            console.log(`${winCount} of ${i} won (${(100 * winCount) / i}%)`);
         }
         gameboard.reset();
     }
     function drawGameboard() {
-        gameboard.draw(context, width - 2 * padding, height - 2 * padding);
+        return gameboard.render(context, width, height, minesCoutner);
     }
     function drawProbabilityMap(mineProbabilityMap) {
         gameboard.mineProbabilityMap = mineProbabilityMap;
@@ -685,9 +708,12 @@ function main() {
         drawGameboard();
     }
     function resizeCanvas() {
-        width = canvas.width = window.innerWidth;
-        height = canvas.height = window.innerHeight;
-        context.translate(padding, padding);
+        const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+        const availableWidth = window.innerWidth - 4 * rem;
+        const availableHeight = window.innerHeight - 8 * rem;
+        const { width: canvasWidth, height: canvasHeight } = gameboard.calculateDimensions(availableWidth, availableHeight);
+        width = canvas.width = canvasWidth;
+        height = canvas.height = canvasHeight;
         drawGameboard();
     }
 }
