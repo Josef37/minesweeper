@@ -5,7 +5,7 @@
   "main": "index.html",
   "scripts": {
     "test": "jest",
-    "build": "node node_modules/browserify/bin/cmd.js src/main.ts -p [ tsify ] -o built/bundle.js"
+    "build": "browserify src/main.ts -p [ tsify ] -o built/bundle.js"
   },
   "repository": {
     "type": "git",
