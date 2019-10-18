@@ -581,27 +581,13 @@ class Gameboard {
         }
         // draw grid
         context.clearRect(0, 0, availableWidth, availableHeight);
-        const { width, height, cellSize } = this.calculateDimensions(availableWidth, availableHeight);
+        const { cellSize } = this.calculateDimensions(availableWidth, availableHeight);
         this.cellSizeInCanvas = cellSize;
         this.doForAllCells((cell, x, y) => {
             cell.draw(context, x * this.cellSizeInCanvas, y * this.cellSizeInCanvas, this.cellSizeInCanvas, this.gameStatus != GameStatus.Playing);
         });
         // mines remaining counter
         minesCounter.textContent = this.countRemainingMines() + " mines remaining";
-        // gameover overlay
-        if (this.gameStatus != GameStatus.Playing) {
-            context.fillStyle = "rgba(255, 255, 255, 0.8)";
-            context.fillRect(0, 0, width, height);
-            let centerX = width / 2;
-            let centerY = height / 2;
-            context.fillStyle = "black";
-            context.textAlign = "center";
-            context.textBaseline = "middle";
-            context.font = `${height * 0.06}px sans-serif`;
-            context.fillText(this.gameStatus, centerX, centerY - 0.05 * height);
-            context.font = `${height * 0.03}px sans-serif`;
-            context.fillText("(right-click to restart)", centerX, centerY + 0.025 * height);
-        }
         if (this.drawProbabilityMap) {
             for (let [cell, mineProbability] of this.mineProbabilityMap) {
                 let [x, y] = utils_1.Utils.getCoordinates(cell, this.width);
@@ -614,7 +600,6 @@ class Gameboard {
                 context.fillText(mineProbability.toFixed(2), (x + 0.5) * this.cellSizeInCanvas, (y + 0.53) * this.cellSizeInCanvas);
             }
         }
-        return { width: width, height: height };
     }
 }
 exports.Gameboard = Gameboard;
@@ -631,6 +616,8 @@ function main() {
     let width;
     let height;
     let minesCoutner = (document.getElementById("mines-counter"));
+    let gameoverOverlay = (document.getElementById("gameover-overlay"));
+    let gameoverMessage = (document.getElementById("gameover-message"));
     // let gameboard = new Gameboard(5, 5, 5, false, 0);
     // let gameboard = new Gameboard(8, 8, 10);
     let gameboard = new gameboard_1.Gameboard(16, 16, 40);
@@ -650,16 +637,23 @@ function main() {
             gameboard.doAction(...gameboard.transpose(canvasX, canvasY));
         } // Right mouse button
         else if (event.button == 2) {
-            if (gameboard.gameStatus != gameboard_1.GameStatus.Playing) {
-                gameboard.reset();
-            }
-            else {
-                gameboard.flagCell(...gameboard.transpose(canvasX, canvasY));
-            }
+            gameboard.flagCell(...gameboard.transpose(canvasX, canvasY));
+        }
+        if (gameboard.gameStatus !== gameboard_1.GameStatus.Playing) {
+            gameoverMessage.textContent = gameboard.gameStatus.toString();
+            gameoverOverlay.style.display = "flex";
         }
         drawGameboard();
         event.preventDefault();
     }
+    gameoverOverlay.addEventListener("contextmenu", event => {
+        if (event.button == 2) {
+            gameoverOverlay.style.display = "none";
+            gameboard.reset();
+            drawGameboard();
+        }
+        event.preventDefault();
+    });
     function onkeypress(event) {
         if (gameboard.gameStatus != gameboard_1.GameStatus.Playing) {
             return;
@@ -700,7 +694,7 @@ function main() {
         gameboard.reset();
     }
     function drawGameboard() {
-        return gameboard.render(context, width, height, minesCoutner);
+        gameboard.render(context, width, height, minesCoutner);
     }
     function drawProbabilityMap(mineProbabilityMap) {
         gameboard.mineProbabilityMap = mineProbabilityMap;

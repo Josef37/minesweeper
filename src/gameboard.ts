@@ -316,8 +316,8 @@ export class Gameboard {
     context: CanvasRenderingContext2D,
     availableWidth: number,
     availableHeight: number,
-    minesCounter: HTMLParagraphElement
-  ): { width: number; height: number } {
+    minesCounter: HTMLParagraphElement,
+  ) {
     // unset highlight for probability map
     if (
       this.drawProbabilityMap &&
@@ -328,7 +328,7 @@ export class Gameboard {
     }
     // draw grid
     context.clearRect(0, 0, availableWidth, availableHeight);
-    const { width, height, cellSize } = this.calculateDimensions(availableWidth, availableHeight);
+    const { cellSize } = this.calculateDimensions(availableWidth, availableHeight);
     this.cellSizeInCanvas = cellSize;
     this.doForAllCells((cell, x, y) => {
       cell.draw(
@@ -341,26 +341,6 @@ export class Gameboard {
     });
     // mines remaining counter
     minesCounter.textContent = this.countRemainingMines() + " mines remaining";
-    // gameover overlay
-    if (this.gameStatus != GameStatus.Playing) {
-      context.fillStyle = "rgba(255, 255, 255, 0.8)";
-      context.fillRect(0, 0, width, height);
-
-      let centerX = width / 2;
-      let centerY = height / 2;
-
-      context.fillStyle = "black";
-      context.textAlign = "center";
-      context.textBaseline = "middle";
-      context.font = `${height * 0.06}px sans-serif`;
-      context.fillText(this.gameStatus, centerX, centerY - 0.05 * height);
-      context.font = `${height * 0.03}px sans-serif`;
-      context.fillText(
-        "(right-click to restart)",
-        centerX,
-        centerY + 0.025 * height
-      );
-    }
 
     if (this.drawProbabilityMap) {
       for (let [cell, mineProbability] of this.mineProbabilityMap) {
@@ -383,7 +363,5 @@ export class Gameboard {
         );
       }
     }
-
-    return { width: width, height: height };
   }
 }

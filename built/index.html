@@ -1,26 +1,18 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
 	<title>Minesweeper</title>
-	<script src="bundle.js"></script>
-	<style>
-		body {
-			margin: 2rem;
-		}
-		canvas {
-			display: block;
-		}
-		p {
-			font-size: 2.5rem;
-			font-family: 'Courier New', Courier, monospace;
-			font-weight: bold;
-			margin: 1.5rem 0;
-			line-height: 1;
-		}
-	</style>
-</head>
-<body>
-	<canvas id="gameboard"></canvas>
-	<p id="mines-counter"></p>
-</body>
+	<link rel="stylesheet" href="style.css">
+    <script defer src="bundle.js"></script>
+  </head>
+  <body>
+    <div id="gameboard-container">
+      <canvas id="gameboard"></canvas>
+      <div id="gameover-overlay">
+        <p id="gameover-message"></p>
+        <p id="gameover-hint">(right-click to restart)</p>
+      </div>
+    </div>
+    <p id="mines-counter"></p>
+  </body>
 </html>
