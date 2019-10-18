@@ -1,0 +1,46 @@
+body {
+  margin: 2rem;
+}
+canvas {
+  display: block;
+}
+p {
+  font-family: "Courier New", Courier, monospace;
+  font-weight: bold;
+  margin: 0;
+}
+
+#mines-counter {
+  font-size: 2.5rem;
+  margin: 1.5rem 0;
+  line-height: 1;
+}
+
+#gameboard-container {
+  position: relative;
+  width: max-content;
+}
+
+#gameover-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.8);
+  overflow: hidden;
+  display: none;
+}
+
+#gameover-message {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+#gameover-hint {
+  font-size: 1.5rem;
+}

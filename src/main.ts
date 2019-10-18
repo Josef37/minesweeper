@@ -13,6 +13,12 @@ function main() {
   let minesCoutner: HTMLParagraphElement = <HTMLParagraphElement>(
     document.getElementById("mines-counter")
   );
+  let gameoverOverlay: HTMLDivElement = <HTMLDivElement>(
+    document.getElementById("gameover-overlay")
+  );
+  let gameoverMessage: HTMLParagraphElement = <HTMLParagraphElement>(
+    document.getElementById("gameover-message")
+  );
 
   // let gameboard = new Gameboard(5, 5, 5, false, 0);
   // let gameboard = new Gameboard(8, 8, 10);
@@ -40,15 +46,25 @@ function main() {
       gameboard.doAction(...gameboard.transpose(canvasX, canvasY));
     } // Right mouse button
     else if (event.button == 2) {
-      if (gameboard.gameStatus != GameStatus.Playing) {
-        gameboard.reset();
-      } else {
-        gameboard.flagCell(...gameboard.transpose(canvasX, canvasY));
-      }
+      gameboard.flagCell(...gameboard.transpose(canvasX, canvasY));
     }
+    if (gameboard.gameStatus !== GameStatus.Playing) {
+      gameoverMessage.textContent = gameboard.gameStatus.toString();
+      gameoverOverlay.style.display = "flex";
+    }
+
     drawGameboard();
     event.preventDefault();
   }
+
+  gameoverOverlay.addEventListener("contextmenu", event => {
+    if (event.button == 2) {
+      gameoverOverlay.style.display = "none";
+      gameboard.reset();
+      drawGameboard();
+    }
+    event.preventDefault();
+  });
 
   function onkeypress(event: KeyboardEvent) {
     if (gameboard.gameStatus != GameStatus.Playing) {
@@ -91,7 +107,7 @@ function main() {
   }
 
   function drawGameboard() {
-    return gameboard.render(context, width, height, minesCoutner);
+    gameboard.render(context, width, height, minesCoutner);
   }
 
   function drawProbabilityMap(mineProbabilityMap: Map<number, number>) {
